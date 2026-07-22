@@ -6098,10 +6098,30 @@ export type UpcomingDiscussionBannerQueryVariables = Exact<{
 
 export type UpcomingDiscussionBannerQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, schedules: Array<{ __typename?: 'BookClubSchedule', id: string, kind: BookClubScheduleKind, config: any }> } };
 
+export type BookClubMembersListQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type BookClubMembersListQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, displayName?: string | null, isCreator: boolean, role: BookClubMemberRole }> } };
+
 export type BookClubBasicSettingsSceneQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type BookClubBasicSettingsSceneQuery = { __typename?: 'Query', bookClubs: Array<{ __typename?: 'BookClub', id: string, name: string, slug: string }> };
+
+export type AddBookClubMemberUsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AddBookClubMemberUsersQuery = { __typename?: 'Query', users: { __typename?: 'PaginatedUserResponse', nodes: Array<{ __typename?: 'User', id: string, username: string }> } };
+
+export type CreateBookClubMemberMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  input: CreateBookClubMemberInput;
+}>;
+
+
+export type CreateBookClubMemberMutation = { __typename?: 'Mutation', createBookClubMember: { __typename?: 'BookClubMember', id: string } };
 
 export type BookClubMembersTableQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -11716,6 +11736,20 @@ export const UpcomingDiscussionBannerDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<UpcomingDiscussionBannerQuery, UpcomingDiscussionBannerQueryVariables>;
+export const BookClubMembersListDocument = new TypedDocumentString(`
+    query BookClubMembersList($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    members {
+      id
+      avatarUrl
+      displayName
+      isCreator
+      role
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<BookClubMembersListQuery, BookClubMembersListQueryVariables>;
 export const BookClubBasicSettingsSceneDocument = new TypedDocumentString(`
     query BookClubBasicSettingsScene {
   bookClubs(all: true) {
@@ -11725,6 +11759,23 @@ export const BookClubBasicSettingsSceneDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<BookClubBasicSettingsSceneQuery, BookClubBasicSettingsSceneQueryVariables>;
+export const AddBookClubMemberUsersDocument = new TypedDocumentString(`
+    query AddBookClubMemberUsers {
+  users(pagination: {none: {unpaginated: true}}) {
+    nodes {
+      id
+      username
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<AddBookClubMemberUsersQuery, AddBookClubMemberUsersQueryVariables>;
+export const CreateBookClubMemberDocument = new TypedDocumentString(`
+    mutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {
+  createBookClubMember(bookClubId: $bookClubId, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<CreateBookClubMemberMutation, CreateBookClubMemberMutationVariables>;
 export const BookClubMembersTableDocument = new TypedDocumentString(`
     query BookClubMembersTable($id: ID!) {
   bookClubById(id: $id) {

@@ -1,9 +1,10 @@
 import { useGraphQLMutation, useSDK, useSuspenseGraphQL } from '@stump/client'
-import { Avatar, Card } from '@stump/components'
+import { Avatar, Button, Card } from '@stump/components'
 import { BookClubMembersTableQuery, graphql } from '@stump/graphql'
 import { BookClubMemberRoleSpec } from '@stump/sdk'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import upperFirst from 'lodash/upperFirst'
+import { UserPlus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -11,6 +12,7 @@ import { Table } from '@/components/table'
 import { useAppContext } from '@/context'
 
 import { useBookClubManagement } from '../context'
+import AddMemberDialog from './AddMemberDialog'
 import MemberActionMenu from './MemberActionMenu'
 import RemoveMemberConfirmation from './RemoveMemberConfirmation'
 
@@ -60,6 +62,7 @@ export default function MembersTable() {
 	)
 
 	const [removingMember, setRemovingMember] = useState<Member | null>(null)
+	const [isAddingMember, setIsAddingMember] = useState(false)
 
 	const { mutate: removeMember } = useGraphQLMutation(removeMutation, {
 		onSuccess: () => refetch(),
@@ -100,6 +103,23 @@ export default function MembersTable() {
 					setRemovingMember(null)
 				}}
 			/>
+			<AddMemberDialog
+				isOpen={isAddingMember}
+				bookClubId={id}
+				roleSpec={roleSpec}
+				excludedUserIds={members?.map(({ userId }) => userId) ?? []}
+				onClose={() => setIsAddingMember(false)}
+				onAdded={() => {
+					setIsAddingMember(false)
+					refetch()
+				}}
+			/>
+			<div className="mb-4 flex justify-end">
+				<Button variant="secondary" size="sm" onClick={() => setIsAddingMember(true)}>
+					<UserPlus className="mr-2 h-4 w-4" />
+					Add member
+				</Button>
+			</div>
 			<Card>
 				<Table
 					sortable

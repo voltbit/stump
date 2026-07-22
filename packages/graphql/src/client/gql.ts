@@ -186,7 +186,10 @@ type Documents = {
     "\n\tquery CreateBookClubForm {\n\t\tbookClubs {\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.CreateBookClubFormDocument,
     "\n\tmutation CreateBookClubScene($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.CreateBookClubSceneDocument,
     "\n\tquery UpcomingDiscussionBanner($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\tkind\n\t\t\t\tconfig\n\t\t\t}\n\t\t}\n\t}\n": typeof types.UpcomingDiscussionBannerDocument,
+    "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tid\n\t\t\t\tavatarUrl\n\t\t\t\tdisplayName\n\t\t\t\tisCreator\n\t\t\t\trole\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubMembersListDocument,
     "\n\tquery BookClubBasicSettingsScene {\n\t\tbookClubs(all: true) {\n\t\t\tid\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.BookClubBasicSettingsSceneDocument,
+    "\n\tquery AddBookClubMemberUsers {\n\t\tusers(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": typeof types.AddBookClubMemberUsersDocument,
+    "\n\tmutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {\n\t\tcreateBookClubMember(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.CreateBookClubMemberDocument,
     "\n\tquery BookClubMembersTable($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tid\n\t\t\t\tavatarUrl\n\t\t\t\tisCreator\n\t\t\t\tdisplayName\n\t\t\t\trole\n\t\t\t\tuserId\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubMembersTableDocument,
     "\n\tmutation RemoveBookClubMember($bookClubId: ID!, $memberId: ID!) {\n\t\tremoveBookClubMember(bookClubId: $bookClubId, memberId: $memberId) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.RemoveBookClubMemberDocument,
     "\n\tquery BookClubSchedulerScene($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\t...ScheduleCard\n\t\t\t}\n\t\t\tbooks {\n\t\t\t\tid\n\t\t\t\ttitle\n\t\t\t\tauthor\n\t\t\t\turl\n\t\t\t\tbookEntityId\n\t\t\t\tentity {\n\t\t\t\t\tid\n\t\t\t\t\tresolvedName\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubSchedulerSceneDocument,
@@ -495,7 +498,10 @@ const documents: Documents = {
     "\n\tquery CreateBookClubForm {\n\t\tbookClubs {\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": types.CreateBookClubFormDocument,
     "\n\tmutation CreateBookClubScene($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": types.CreateBookClubSceneDocument,
     "\n\tquery UpcomingDiscussionBanner($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\tkind\n\t\t\t\tconfig\n\t\t\t}\n\t\t}\n\t}\n": types.UpcomingDiscussionBannerDocument,
+    "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tid\n\t\t\t\tavatarUrl\n\t\t\t\tdisplayName\n\t\t\t\tisCreator\n\t\t\t\trole\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubMembersListDocument,
     "\n\tquery BookClubBasicSettingsScene {\n\t\tbookClubs(all: true) {\n\t\t\tid\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": types.BookClubBasicSettingsSceneDocument,
+    "\n\tquery AddBookClubMemberUsers {\n\t\tusers(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": types.AddBookClubMemberUsersDocument,
+    "\n\tmutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {\n\t\tcreateBookClubMember(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": types.CreateBookClubMemberDocument,
     "\n\tquery BookClubMembersTable($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tid\n\t\t\t\tavatarUrl\n\t\t\t\tisCreator\n\t\t\t\tdisplayName\n\t\t\t\trole\n\t\t\t\tuserId\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubMembersTableDocument,
     "\n\tmutation RemoveBookClubMember($bookClubId: ID!, $memberId: ID!) {\n\t\tremoveBookClubMember(bookClubId: $bookClubId, memberId: $memberId) {\n\t\t\tid\n\t\t}\n\t}\n": types.RemoveBookClubMemberDocument,
     "\n\tquery BookClubSchedulerScene($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\t...ScheduleCard\n\t\t\t}\n\t\t\tbooks {\n\t\t\t\tid\n\t\t\t\ttitle\n\t\t\t\tauthor\n\t\t\t\turl\n\t\t\t\tbookEntityId\n\t\t\t\tentity {\n\t\t\t\t\tid\n\t\t\t\t\tresolvedName\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubSchedulerSceneDocument,
@@ -1320,7 +1326,19 @@ export function graphql(source: "\n\tquery UpcomingDiscussionBanner($id: ID!) {\
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tid\n\t\t\t\tavatarUrl\n\t\t\t\tdisplayName\n\t\t\t\tisCreator\n\t\t\t\trole\n\t\t\t}\n\t\t}\n\t}\n"): typeof import('./graphql').BookClubMembersListDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n\tquery BookClubBasicSettingsScene {\n\t\tbookClubs(all: true) {\n\t\t\tid\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n"): typeof import('./graphql').BookClubBasicSettingsSceneDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tquery AddBookClubMemberUsers {\n\t\tusers(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n"): typeof import('./graphql').AddBookClubMemberUsersDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tmutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {\n\t\tcreateBookClubMember(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n"): typeof import('./graphql').CreateBookClubMemberDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

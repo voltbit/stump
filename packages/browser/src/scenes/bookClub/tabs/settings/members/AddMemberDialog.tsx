@@ -1,0 +1,167 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useGraphQL, useGraphQLMutation, useSDK } from '@stump/client'
+import { Button, ComboBox, Dialog, Form, Input, Label, NativeSelect } from '@stump/components'
+import { BookClubMemberRole, extractErrorMessage, graphql } from '@stump/graphql'
+import { BookClubMemberRoleSpec } from '@stump/sdk'
+import { useEffect, useMemo } from 'react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+
+import {
+	addMemberFormSchema,
+	AddMemberFormValues,
+	buildCreateMemberInput,
+	buildRoleOptions,
+	buildUserOptions,
+	emptyAddMemberFormValues,
+} from './addMemberForm'
+
+const usersQuery = graphql(`
+	query AddBookClubMemberUsers {
+		users(pagination: { none: { unpaginated: true } }) {
+			nodes {
+				id
+				username
+			}
+		}
+	}
+`)
+
+const mutation = graphql(`
+	mutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {
+		createBookClubMember(bookClubId: $bookClubId, input: $input) {
+			id
+		}
+	}
+`)
+
+type Props = {
+	isOpen: boolean
+	bookClubId: string
+	roleSpec: BookClubMemberRoleSpec
+	/** Userids that are already members of the club, and should be excluded from the picker */
+	excludedUserIds: string[]
+	onClose: () => void
+	onAdded: () => void
+}
+
+export default function AddMemberDialog({
+	isOpen,
+	bookClubId,
+	roleSpec,
+	excludedUserIds,
+	onClose,
+	onAdded,
+}: Props) {
+	const { sdk } = useSDK()
+
+	// Only fetch the candidate user list while the dialog is actually open
+	const { data: usersData } = useGraphQL(
+		usersQuery,
+		sdk.cacheKey('users', ['unpaginated']),
+		undefined,
+		{ enabled: isOpen },
+	)
+
+	const userOptions = useMemo(
+		() => buildUserOptions(usersData?.users.nodes ?? [], excludedUserIds),
+		[usersData, excludedUserIds],
+	)
+
+	const roleOptions = useMemo(() => buildRoleOptions(roleSpec), [roleSpec])
+
+	const form = useForm<AddMemberFormValues>({
+		defaultValues: emptyAddMemberFormValues,
+		resolver: zodResolver(addMemberFormSchema),
+	})
+
+	useEffect(() => {
+		if (isOpen) {
+			form.reset(emptyAddMemberFormValues)
+		}
+	}, [isOpen, form])
+
+	const userId = form.watch('userId')
+	const role = form.watch('role')
+
+	const { mutate: createMember, isPending } = useGraphQLMutation(mutation, {
+		onError: (error) => {
+			console.error('Error adding member:', error)
+			toast.error('Failed to add member', { description: extractErrorMessage(error) })
+		},
+		onSuccess: () => {
+			toast.success('Member added')
+			onAdded()
+		},
+	})
+
+	const handleSubmit = (values: AddMemberFormValues) => {
+		createMember({
+			bookClubId,
+			input: buildCreateMemberInput(values),
+		})
+	}
+
+	return (
+		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+			<Dialog.Content size="md">
+				<Dialog.Header>
+					<Dialog.Title>Add member</Dialog.Title>
+					<Dialog.Close onClick={onClose} />
+				</Dialog.Header>
+
+				<Form id="add-book-club-member" form={form} onSubmit={handleSubmit}>
+					<div className="gap-1.5 flex flex-col">
+						<ComboBox
+							label="User"
+							options={userOptions}
+							value={userId}
+							onChange={(value) => form.setValue('userId', value ?? '', { shouldValidate: true })}
+							filterable
+							size="full"
+							placeholder="Select a user..."
+							filterPlaceholder="Search users..."
+							filterEmptyMessage={
+								userOptions.length ? 'No matching users' : 'No users available to add'
+							}
+						/>
+						{form.formState.errors.userId && (
+							<span className="text-xs text-destructive">
+								{form.formState.errors.userId.message}
+							</span>
+						)}
+					</div>
+
+					<div className="gap-1.5 flex flex-col">
+						<Label>Role</Label>
+						<NativeSelect
+							value={role}
+							options={roleOptions}
+							onChange={(e) =>
+								form.setValue('role', e.target.value as BookClubMemberRole, {
+									shouldValidate: true,
+								})
+							}
+						/>
+					</div>
+
+					<Input
+						label="Display name"
+						description="Optional - defaults to the user's username"
+						placeholder="Optional"
+						{...form.register('displayName')}
+					/>
+				</Form>
+
+				<Dialog.Footer>
+					<Button variant="outline" onClick={onClose} disabled={isPending}>
+						Cancel
+					</Button>
+					<Button type="submit" form="add-book-club-member" disabled={isPending}>
+						Add member
+					</Button>
+				</Dialog.Footer>
+			</Dialog.Content>
+		</Dialog>
+	)
+}
