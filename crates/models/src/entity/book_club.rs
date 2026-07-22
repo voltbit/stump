@@ -140,6 +140,8 @@ pub enum Relation {
 	BookClubInvitation,
 	#[sea_orm(has_many = "super::book_club_member::Entity")]
 	BookClubMember,
+	#[sea_orm(has_many = "super::book_club_schedule::Entity")]
+	BookClubSchedule,
 }
 
 impl Related<super::book_club_book::Entity> for Entity {
@@ -157,6 +159,12 @@ impl Related<super::book_club_invitation::Entity> for Entity {
 impl Related<super::book_club_member::Entity> for Entity {
 	fn to() -> RelationDef {
 		Relation::BookClubMember.def()
+	}
+}
+
+impl Related<super::book_club_schedule::Entity> for Entity {
+	fn to() -> RelationDef {
+		Relation::BookClubSchedule.def()
 	}
 }
 

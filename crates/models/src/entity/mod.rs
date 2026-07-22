@@ -10,6 +10,7 @@ pub mod book_club_discussion_message_reaction;
 pub mod book_club_invitation;
 pub mod book_club_member;
 pub mod book_club_member_favorite_book;
+pub mod book_club_schedule;
 pub mod bookmark;
 pub mod collection;
 pub mod custom_emoji;

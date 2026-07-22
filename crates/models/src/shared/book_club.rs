@@ -125,3 +125,32 @@ pub enum BookClubSuggestionStatus {
 	#[sea_orm(string_value = "REJECTED")]
 	Rejected,
 }
+
+/// The kind of a book club schedule, which determines how its `config` JSON payload
+/// should be interpreted. See [crate::shared::book_club_schedule] for the config
+/// payload shape associated with each kind.
+#[derive(
+	Eq,
+	Copy,
+	Hash,
+	Debug,
+	Clone,
+	EnumIter,
+	PartialEq,
+	Serialize,
+	Deserialize,
+	DeriveActiveEnum,
+	Enum,
+	Display,
+)]
+#[sea_orm(rs_type = "String", db_type = "Text")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum BookClubScheduleKind {
+	/// A single upcoming meeting/discussion
+	#[sea_orm(string_value = "UPCOMING_DISCUSSION")]
+	UpcomingDiscussion,
+	/// Books assigned on a recurring interval
+	#[sea_orm(string_value = "INTERVAL_BOOKS")]
+	IntervalBooks,
+}
