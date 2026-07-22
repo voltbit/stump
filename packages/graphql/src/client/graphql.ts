@@ -204,6 +204,8 @@ export type BookClub = {
   previousBooks: Array<BookClubBook>;
   previousDiscussionsCount: Scalars['Int']['output'];
   roleSpec: Scalars['JSON']['output'];
+  /** All schedules configured for this book club */
+  schedules: Array<BookClubSchedule>;
   slug: Scalars['String']['output'];
 };
 
@@ -378,6 +380,29 @@ export enum BookClubMemberRole {
   Moderator = 'MODERATOR'
 }
 
+export type BookClubSchedule = {
+  __typename?: 'BookClubSchedule';
+  bookClubId: Scalars['String']['output'];
+  /** The kind-specific config payload for this schedule */
+  config: Scalars['JSON']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  kind: BookClubScheduleKind;
+  name: Scalars['String']['output'];
+};
+
+/**
+ * The kind of a book club schedule, which determines how its `config` JSON payload
+ * should be interpreted. See [crate::shared::book_club_schedule] for the config
+ * payload shape associated with each kind.
+ */
+export enum BookClubScheduleKind {
+  /** Books assigned on a recurring interval */
+  IntervalBooks = 'INTERVAL_BOOKS',
+  /** A single upcoming meeting/discussion */
+  UpcomingDiscussion = 'UPCOMING_DISCUSSION'
+}
+
 /** The status of a book suggestion */
 export enum BookClubSuggestionStatus {
   Accepted = 'ACCEPTED',
@@ -489,6 +514,12 @@ export type CreateBookClubMemberInput = {
   displayName?: InputMaybe<Scalars['String']['input']>;
   role: BookClubMemberRole;
   userId: Scalars['String']['input'];
+};
+
+export type CreateBookClubScheduleInput = {
+  config: Scalars['JSON']['input'];
+  kind: BookClubScheduleKind;
+  name: Scalars['String']['input'];
 };
 
 export type CreateCustomEmojiInput = {
@@ -1980,6 +2011,8 @@ export type Mutation = {
   createBookClubInvitation: BookClubInvitation;
   /** Creates a new member in the book club */
   createBookClubMember: BookClubMember;
+  /** Create a new schedule for the book club (Admin+) */
+  createBookClubSchedule: BookClubSchedule;
   /** Create a bookmark for a user */
   createBookmark: Bookmark;
   /** Manually create a discussion for a book */
@@ -2017,6 +2050,8 @@ export type Mutation = {
   deleteAnnotation: MediaAnnotation;
   deleteApiKey: Apikey;
   deleteBookClub: BookClub;
+  /** Delete a schedule from the book club (Admin+) */
+  deleteBookClubSchedule: BookClubSchedule;
   /** Delete a bookmark by ID, only if the user created it */
   deleteBookmark: Bookmark;
   /** Delete a bookmark by epubcfi */
@@ -2165,6 +2200,8 @@ export type Mutation = {
   updateAnnotation: MediaAnnotation;
   updateApiKey: Apikey;
   updateBookClub: BookClub;
+  /** Update an existing schedule for the book club (Admin+) */
+  updateBookClubSchedule: BookClubSchedule;
   /** Rename a custom emoji */
   updateCustomEmoji: CustomEmoji;
   updateEmailDevice: RegisteredEmailDevice;
@@ -2376,6 +2413,12 @@ export type MutationCreateBookClubMemberArgs = {
 };
 
 
+export type MutationCreateBookClubScheduleArgs = {
+  bookClubId: Scalars['ID']['input'];
+  input: CreateBookClubScheduleInput;
+};
+
+
 export type MutationCreateBookmarkArgs = {
   input: BookmarkInput;
 };
@@ -2453,6 +2496,12 @@ export type MutationDeleteApiKeyArgs = {
 
 
 export type MutationDeleteBookClubArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteBookClubScheduleArgs = {
+  bookClubId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
@@ -2810,6 +2859,13 @@ export type MutationUpdateApiKeyArgs = {
 export type MutationUpdateBookClubArgs = {
   id: Scalars['ID']['input'];
   input: UpdateBookClubInput;
+};
+
+
+export type MutationUpdateBookClubScheduleArgs = {
+  bookClubId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+  input: UpdateBookClubScheduleInput;
 };
 
 
@@ -3307,6 +3363,8 @@ export type Query = {
   bookClubDiscussionMessages: CursorPaginatedBookClubDiscussionMessageResponse;
   /** Get all discussions for a book club, ordered by pinned first, then by date created */
   bookClubDiscussions: Array<BookClubDiscussion>;
+  /** Get all schedules configured for a book club */
+  bookClubSchedules: Array<BookClubSchedule>;
   /** Get a single suggestion by ID */
   bookClubSuggestion: BookClubBookSuggestion;
   /** Get all suggestions for a book club */
@@ -3471,6 +3529,11 @@ export type QueryBookClubDiscussionMessagesArgs = {
 
 
 export type QueryBookClubDiscussionsArgs = {
+  bookClubId: Scalars['ID']['input'];
+};
+
+
+export type QueryBookClubSchedulesArgs = {
   bookClubId: Scalars['ID']['input'];
 };
 
@@ -4583,6 +4646,12 @@ export type UpdateBookClubInput = {
   emoji?: InputMaybe<Scalars['String']['input']>;
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
   memberRoleSpec?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateBookClubScheduleInput = {
+  config?: InputMaybe<Scalars['JSON']['input']>;
+  kind?: InputMaybe<BookClubScheduleKind>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -6022,6 +6091,13 @@ export type CreateBookClubSceneMutationVariables = Exact<{
 
 export type CreateBookClubSceneMutation = { __typename?: 'Mutation', createBookClub: { __typename?: 'BookClub', id: string, slug: string } };
 
+export type UpcomingDiscussionBannerQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type UpcomingDiscussionBannerQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, schedules: Array<{ __typename?: 'BookClubSchedule', id: string, kind: BookClubScheduleKind, config: any }> } };
+
 export type BookClubBasicSettingsSceneQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -6041,6 +6117,43 @@ export type RemoveBookClubMemberMutationVariables = Exact<{
 
 
 export type RemoveBookClubMemberMutation = { __typename?: 'Mutation', removeBookClubMember: { __typename?: 'BookClubMember', id: string } };
+
+export type BookClubSchedulerSceneQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type BookClubSchedulerSceneQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, schedules: Array<(
+      { __typename?: 'BookClubSchedule', id: string }
+      & { ' $fragmentRefs'?: { 'ScheduleCardFragment': ScheduleCardFragment } }
+    )>, books: Array<{ __typename?: 'BookClubBook', id: string, title?: string | null, author?: string | null, url?: string | null, bookEntityId?: string | null, entity?: { __typename?: 'Media', id: string, resolvedName: string } | null }> } };
+
+export type DeleteBookClubScheduleMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteBookClubScheduleMutation = { __typename?: 'Mutation', deleteBookClubSchedule: { __typename?: 'BookClubSchedule', id: string } };
+
+export type CreateBookClubScheduleMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  input: CreateBookClubScheduleInput;
+}>;
+
+
+export type CreateBookClubScheduleMutation = { __typename?: 'Mutation', createBookClubSchedule: { __typename?: 'BookClubSchedule', id: string } };
+
+export type UpdateBookClubScheduleMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+  input: UpdateBookClubScheduleInput;
+}>;
+
+
+export type UpdateBookClubScheduleMutation = { __typename?: 'Mutation', updateBookClubSchedule: { __typename?: 'BookClubSchedule', id: string } };
+
+export type ScheduleCardFragment = { __typename?: 'BookClubSchedule', id: string, name: string, kind: BookClubScheduleKind, config: any, createdAt: any } & { ' $fragmentName'?: 'ScheduleCardFragment' };
 
 export type BookSearchSceneQueryVariables = Exact<{
   filter: MediaFilterInput;
@@ -7729,6 +7842,15 @@ export const BookThumbnailSelectorFragmentDoc = new TypedDocumentString(`
   pages
 }
     `, {"fragmentName":"BookThumbnailSelector"}) as unknown as TypedDocumentString<BookThumbnailSelectorFragment, unknown>;
+export const ScheduleCardFragmentDoc = new TypedDocumentString(`
+    fragment ScheduleCard on BookClubSchedule {
+  id
+  name
+  kind
+  config
+  createdAt
+}
+    `, {"fragmentName":"ScheduleCard"}) as unknown as TypedDocumentString<ScheduleCardFragment, unknown>;
 export const ContinueReadingBookFragmentDoc = new TypedDocumentString(`
     fragment ContinueReadingBook on Media {
   id
@@ -11582,6 +11704,18 @@ export const CreateBookClubSceneDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CreateBookClubSceneMutation, CreateBookClubSceneMutationVariables>;
+export const UpcomingDiscussionBannerDocument = new TypedDocumentString(`
+    query UpcomingDiscussionBanner($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    schedules {
+      id
+      kind
+      config
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<UpcomingDiscussionBannerQuery, UpcomingDiscussionBannerQueryVariables>;
 export const BookClubBasicSettingsSceneDocument = new TypedDocumentString(`
     query BookClubBasicSettingsScene {
   bookClubs(all: true) {
@@ -11613,6 +11747,55 @@ export const RemoveBookClubMemberDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RemoveBookClubMemberMutation, RemoveBookClubMemberMutationVariables>;
+export const BookClubSchedulerSceneDocument = new TypedDocumentString(`
+    query BookClubSchedulerScene($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    schedules {
+      id
+      ...ScheduleCard
+    }
+    books {
+      id
+      title
+      author
+      url
+      bookEntityId
+      entity {
+        id
+        resolvedName
+      }
+    }
+  }
+}
+    fragment ScheduleCard on BookClubSchedule {
+  id
+  name
+  kind
+  config
+  createdAt
+}`) as unknown as TypedDocumentString<BookClubSchedulerSceneQuery, BookClubSchedulerSceneQueryVariables>;
+export const DeleteBookClubScheduleDocument = new TypedDocumentString(`
+    mutation DeleteBookClubSchedule($bookClubId: ID!, $id: ID!) {
+  deleteBookClubSchedule(bookClubId: $bookClubId, id: $id) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<DeleteBookClubScheduleMutation, DeleteBookClubScheduleMutationVariables>;
+export const CreateBookClubScheduleDocument = new TypedDocumentString(`
+    mutation CreateBookClubSchedule($bookClubId: ID!, $input: CreateBookClubScheduleInput!) {
+  createBookClubSchedule(bookClubId: $bookClubId, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<CreateBookClubScheduleMutation, CreateBookClubScheduleMutationVariables>;
+export const UpdateBookClubScheduleDocument = new TypedDocumentString(`
+    mutation UpdateBookClubSchedule($bookClubId: ID!, $id: ID!, $input: UpdateBookClubScheduleInput!) {
+  updateBookClubSchedule(bookClubId: $bookClubId, id: $id, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<UpdateBookClubScheduleMutation, UpdateBookClubScheduleMutationVariables>;
 export const BookSearchSceneDocument = new TypedDocumentString(`
     query BookSearchScene($filter: MediaFilterInput!, $orderBy: [MediaOrderBy!]!, $pagination: Pagination!) {
   media(filter: $filter, orderBy: $orderBy, pagination: $pagination) {
