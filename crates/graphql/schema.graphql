@@ -148,6 +148,8 @@ type BookClub {
 	previousBooks: [BookClubBook!]!
 	"All books in the club's queue, ordered by position"
 	books: [BookClubBook!]!
+	"All schedules configured for this book club"
+	schedules: [BookClubSchedule!]!
 	invitations: [BookClubInvitation!]!
 	members: [BookClubMember!]!
 	moderators: [BookClubMember!]!
@@ -324,6 +326,28 @@ enum BookClubMemberRole {
 	CREATOR
 }
 
+type BookClubSchedule {
+	id: String!
+	bookClubId: String!
+	name: String!
+	kind: BookClubScheduleKind!
+	createdAt: DateTime!
+	"The kind-specific config payload for this schedule"
+	config: JSON!
+}
+
+"""
+The kind of a book club schedule, which determines how its `config` JSON payload
+should be interpreted. See [crate::shared::book_club_schedule] for the config
+payload shape associated with each kind.
+"""
+enum BookClubScheduleKind {
+	"A single upcoming meeting/discussion"
+	UPCOMING_DISCUSSION
+	"Books assigned on a recurring interval"
+	INTERVAL_BOOKS
+}
+
 "The status of a book suggestion"
 enum BookClubSuggestionStatus {
 	PENDING
@@ -433,6 +457,12 @@ input CreateBookClubMemberInput {
 	userId: String!
 	displayName: String
 	role: BookClubMemberRole!
+}
+
+input CreateBookClubScheduleInput {
+	name: String!
+	kind: BookClubScheduleKind!
+	config: JSON!
 }
 
 input CreateCustomEmojiInput {
@@ -1866,6 +1896,12 @@ type Mutation {
 	toggleSuggestionLike(suggestionId: ID!): Boolean!
 	"Update the status of a suggestion (Admin+)"
 	updateSuggestionStatus(suggestionId: ID!, status: BookClubSuggestionStatus!, notes: String): BookClubBookSuggestion!
+	"Create a new schedule for the book club (Admin+)"
+	createBookClubSchedule(bookClubId: ID!, input: CreateBookClubScheduleInput!): BookClubSchedule!
+	"Update an existing schedule for the book club (Admin+)"
+	updateBookClubSchedule(bookClubId: ID!, id: ID!, input: UpdateBookClubScheduleInput!): BookClubSchedule!
+	"Delete a schedule from the book club (Admin+)"
+	deleteBookClubSchedule(bookClubId: ID!, id: ID!): BookClubSchedule!
 	analyzeMedia(id: ID!, forceReanalysis: Boolean! = false): Boolean!
 	convertMedia(id: ID!): Boolean!
 	deleteMedia(id: ID!): Media!
@@ -2428,6 +2464,8 @@ type Query {
 	bookClubSuggestions(bookClubId: ID!, status: BookClubSuggestionStatus): [BookClubBookSuggestion!]!
 	"Get a single suggestion by ID"
 	bookClubSuggestion(suggestionId: ID!): BookClubBookSuggestion!
+	"Get all schedules configured for a book club"
+	bookClubSchedules(bookClubId: ID!): [BookClubSchedule!]!
 	"Get a single author by name (case-insensitive exact match)"
 	authorByName(		name: String!,
 		"Optional library ID to scope the author search"
@@ -3387,6 +3425,12 @@ input UpdateBookClubInput {
 	isPrivate: Boolean
 	memberRoleSpec: JSON
 	emoji: String
+}
+
+input UpdateBookClubScheduleInput {
+	name: String
+	kind: BookClubScheduleKind
+	config: JSON
 }
 
 input UpdateCustomEmojiInput {

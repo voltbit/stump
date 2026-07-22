@@ -1,9 +1,14 @@
-use async_graphql::{CustomValidator, InputObject, InputValueError, Json, ID};
-use models::{
-	entity::{book_club, book_club_member, user::AuthUser},
-	shared::book_club::{BookClubMemberRole, BookClubMemberRoleSpec},
+use async_graphql::{
+	CustomValidator, Error as GraphQLError, InputObject, InputValueError, Json, ID,
 };
-use sea_orm::{prelude::*, Set};
+use models::{
+	entity::{book_club, book_club_member, book_club_schedule, user::AuthUser},
+	shared::{
+		book_club::{BookClubMemberRole, BookClubMemberRoleSpec, BookClubScheduleKind},
+		book_club_schedule::validate_schedule_config,
+	},
+};
+use sea_orm::{prelude::*, IntoActiveModel, Set};
 use slugify::slugify;
 
 use crate::object::book_club_book::BookClubBookVariant;
@@ -218,6 +223,78 @@ pub struct UpdateMemberProfileInput {
 	pub hide_progress: Option<bool>,
 }
 
+#[derive(Debug, InputObject)]
+pub struct CreateBookClubScheduleInput {
+	pub name: String,
+	pub kind: BookClubScheduleKind,
+	pub config: Json<serde_json::Value>,
+}
+
+impl CreateBookClubScheduleInput {
+	pub fn into_active_model(
+		self,
+		book_club_id: &str,
+	) -> Result<book_club_schedule::ActiveModel, GraphQLError> {
+		validate_schedule_name(&self.name)?;
+		validate_schedule_config(self.kind, &self.config.0).map_err(GraphQLError::new)?;
+
+		Ok(book_club_schedule::ActiveModel {
+			name: Set(self.name),
+			kind: Set(self.kind),
+			config: Set(self.config.0.to_string()),
+			book_club_id: Set(book_club_id.to_string()),
+			..Default::default()
+		})
+	}
+}
+
+#[derive(Debug, InputObject)]
+pub struct UpdateBookClubScheduleInput {
+	pub name: Option<String>,
+	pub kind: Option<BookClubScheduleKind>,
+	pub config: Option<Json<serde_json::Value>>,
+}
+
+impl UpdateBookClubScheduleInput {
+	/// Applies this input on top of an existing schedule, re-validating the effective
+	/// config against the effective kind (whichever of the two, or both, were not
+	/// provided fall back to the existing schedule's values)
+	pub fn apply(
+		self,
+		schedule: book_club_schedule::Model,
+	) -> Result<book_club_schedule::ActiveModel, GraphQLError> {
+		if let Some(ref name) = self.name {
+			validate_schedule_name(name)?;
+		}
+
+		let kind = self.kind.unwrap_or(schedule.kind);
+		let config = match self.config {
+			Some(config) => config.0,
+			None => serde_json::from_str(&schedule.config)
+				.map_err(|_| GraphQLError::new("Stored schedule config is corrupted"))?,
+		};
+
+		validate_schedule_config(kind, &config).map_err(GraphQLError::new)?;
+
+		let mut active_model = schedule.into_active_model();
+		if let Some(name) = self.name {
+			active_model.name = Set(name);
+		}
+		active_model.kind = Set(kind);
+		active_model.config = Set(config.to_string());
+
+		Ok(active_model)
+	}
+}
+
+fn validate_schedule_name(name: &str) -> Result<(), GraphQLError> {
+	if name.trim().is_empty() {
+		return Err(GraphQLError::new("Schedule name cannot be empty"));
+	}
+
+	Ok(())
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::common::*;
@@ -250,5 +327,156 @@ mod tests {
 		assert_eq!(member.display_name, Set(None));
 		assert_eq!(member.user_id, Set(user.id));
 		assert!(Uuid::parse_str(&member.id.unwrap()).is_ok());
+	}
+
+	fn get_default_schedule() -> book_club_schedule::Model {
+		book_club_schedule::Model {
+			id: "sched-1".to_string(),
+			book_club_id: "club-1".to_string(),
+			name: "Upcoming book discussion".to_string(),
+			kind: BookClubScheduleKind::UpcomingDiscussion,
+			config: serde_json::json!({
+				"startsAt": "2026-08-01T18:00:00+00:00",
+				"recurrence": null,
+			})
+			.to_string(),
+			created_at: chrono::Utc::now().into(),
+		}
+	}
+
+	#[test]
+	fn create_schedule_input_valid_upcoming_discussion() {
+		let input = CreateBookClubScheduleInput {
+			name: "Upcoming book discussion".to_string(),
+			kind: BookClubScheduleKind::UpcomingDiscussion,
+			config: Json(serde_json::json!({
+				"startsAt": "2026-08-01T18:00:00+00:00",
+				"recurrence": null,
+			})),
+		};
+
+		let active_model = input.into_active_model("club-1").unwrap();
+		assert_eq!(
+			active_model.name,
+			Set("Upcoming book discussion".to_string())
+		);
+		assert_eq!(
+			active_model.kind,
+			Set(BookClubScheduleKind::UpcomingDiscussion)
+		);
+		assert_eq!(active_model.book_club_id, Set("club-1".to_string()));
+	}
+
+	#[test]
+	fn create_schedule_input_valid_interval_books() {
+		let input = CreateBookClubScheduleInput {
+			name: "Reading rotation".to_string(),
+			kind: BookClubScheduleKind::IntervalBooks,
+			config: Json(serde_json::json!({
+				"interval": { "every": 2, "unit": "WEEK", "anchor": "2026-08-01" },
+				"assignments": [],
+			})),
+		};
+
+		let active_model = input.into_active_model("club-1").unwrap();
+		assert_eq!(active_model.kind, Set(BookClubScheduleKind::IntervalBooks));
+	}
+
+	#[test]
+	fn create_schedule_input_rejects_empty_name() {
+		let input = CreateBookClubScheduleInput {
+			name: "   ".to_string(),
+			kind: BookClubScheduleKind::UpcomingDiscussion,
+			config: Json(serde_json::json!({
+				"startsAt": "2026-08-01T18:00:00+00:00",
+				"recurrence": null,
+			})),
+		};
+
+		assert!(input.into_active_model("club-1").is_err());
+	}
+
+	#[test]
+	fn create_schedule_input_rejects_kind_mismatch() {
+		let input = CreateBookClubScheduleInput {
+			name: "Reading rotation".to_string(),
+			kind: BookClubScheduleKind::IntervalBooks,
+			config: Json(serde_json::json!({
+				"startsAt": "2026-08-01T18:00:00+00:00",
+				"recurrence": null,
+			})),
+		};
+
+		assert!(input.into_active_model("club-1").is_err());
+	}
+
+	#[test]
+	fn create_schedule_input_rejects_wrong_shape() {
+		let input = CreateBookClubScheduleInput {
+			name: "Reading rotation".to_string(),
+			kind: BookClubScheduleKind::IntervalBooks,
+			config: Json(serde_json::json!({ "foo": "bar" })),
+		};
+
+		assert!(input.into_active_model("club-1").is_err());
+	}
+
+	#[test]
+	fn update_schedule_input_keeps_existing_config_when_omitted() {
+		let schedule = get_default_schedule();
+		let input = UpdateBookClubScheduleInput {
+			name: Some("Renamed discussion".to_string()),
+			kind: None,
+			config: None,
+		};
+
+		let active_model = input.apply(schedule).unwrap();
+		assert_eq!(active_model.name, Set("Renamed discussion".to_string()));
+		assert_eq!(
+			active_model.kind,
+			Set(BookClubScheduleKind::UpcomingDiscussion)
+		);
+	}
+
+	#[test]
+	fn update_schedule_input_rejects_empty_name() {
+		let schedule = get_default_schedule();
+		let input = UpdateBookClubScheduleInput {
+			name: Some("   ".to_string()),
+			kind: None,
+			config: None,
+		};
+
+		assert!(input.apply(schedule).is_err());
+	}
+
+	#[test]
+	fn update_schedule_input_rejects_kind_mismatch_with_existing_config() {
+		let schedule = get_default_schedule();
+		// Switching kind without providing a matching config should fail, since the
+		// existing config is only valid for the existing kind
+		let input = UpdateBookClubScheduleInput {
+			name: None,
+			kind: Some(BookClubScheduleKind::IntervalBooks),
+			config: None,
+		};
+
+		assert!(input.apply(schedule).is_err());
+	}
+
+	#[test]
+	fn update_schedule_input_allows_kind_and_config_change_together() {
+		let schedule = get_default_schedule();
+		let input = UpdateBookClubScheduleInput {
+			name: None,
+			kind: Some(BookClubScheduleKind::IntervalBooks),
+			config: Some(Json(serde_json::json!({
+				"interval": { "every": 1, "unit": "MONTH", "anchor": "2026-08-01" },
+				"assignments": [],
+			}))),
+		};
+
+		let active_model = input.apply(schedule).unwrap();
+		assert_eq!(active_model.kind, Set(BookClubScheduleKind::IntervalBooks));
 	}
 }

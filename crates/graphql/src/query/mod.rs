@@ -4,6 +4,7 @@ mod book_club;
 mod book_club_book;
 mod book_club_discussion;
 mod book_club_invitation;
+mod book_club_schedule;
 mod book_club_suggestion;
 mod config;
 mod custom_emoji;
@@ -33,6 +34,7 @@ use book_club::BookClubQuery;
 use book_club_book::BookClubBookQuery;
 use book_club_discussion::BookClubDiscussionQuery;
 use book_club_invitation::BookClubInvitationQuery;
+use book_club_schedule::BookClubScheduleQuery;
 use book_club_suggestion::BookClubSuggestionQuery;
 use config::ConfigQuery;
 use custom_emoji::CustomEmojiQuery;
@@ -67,6 +69,7 @@ struct BookClubQueries(
 	BookClubDiscussionQuery,
 	BookClubInvitationQuery,
 	BookClubSuggestionQuery,
+	BookClubScheduleQuery,
 );
 
 #[derive(async_graphql::MergedObject, Default)]

@@ -7,6 +7,7 @@ pub mod book_club_discussion;
 pub mod book_club_discussion_message;
 pub mod book_club_invitation;
 pub mod book_club_member;
+pub mod book_club_schedule;
 pub mod bookmark;
 pub mod custom_emoji;
 pub mod directory_listing;

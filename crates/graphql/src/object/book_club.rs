@@ -3,10 +3,11 @@ use crate::data::{AuthContext, CoreContext};
 use crate::object::book_club_book::BookClubBook;
 use crate::object::book_club_discussion::BookClubDiscussion;
 use crate::object::book_club_invitation::BookClubInvitation;
+use crate::object::book_club_schedule::BookClubSchedule;
 use async_graphql::{ComplexObject, Context, Json, Result, SimpleObject};
 use models::entity::{
 	book_club, book_club_book, book_club_discussion, book_club_invitation,
-	book_club_member,
+	book_club_member, book_club_schedule,
 };
 use models::shared::book_club::{BookClubMemberRole, BookClubMemberRoleSpec};
 use sea_orm::prelude::*;
@@ -98,6 +99,17 @@ impl BookClub {
 			.await?;
 
 		Ok(books.into_iter().map(BookClubBook::from).collect())
+	}
+
+	/// All schedules configured for this book club
+	async fn schedules(&self, ctx: &Context<'_>) -> Result<Vec<BookClubSchedule>> {
+		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
+
+		let schedules = book_club_schedule::Entity::find_for_book_club_id(&self.model.id)
+			.all(conn)
+			.await?;
+
+		Ok(schedules.into_iter().map(BookClubSchedule::from).collect())
 	}
 
 	async fn invitations(&self, ctx: &Context<'_>) -> Result<Vec<BookClubInvitation>> {
