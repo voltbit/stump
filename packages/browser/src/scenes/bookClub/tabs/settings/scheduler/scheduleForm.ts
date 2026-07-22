@@ -153,7 +153,14 @@ export function editingFormValues(
 	}
 }
 
-function assignmentFormValue(
+/**
+ * Rehydrates a stored interval assignment into its form value, re-matching an entity-backed
+ * book against the club's current reading list. If the entity can no longer be found (e.g. it
+ * was removed from the reading list since the schedule was saved), falls back to manual mode
+ * populated from the assignment's stored title/author/url snapshot (see `buildAssignedBook`) so
+ * nothing is silently blanked out.
+ */
+export function assignmentFormValue(
 	assignment: IntervalAssignment,
 	clubBooks: ClubBookOption[],
 ): AssignmentFormValue {
@@ -250,8 +257,16 @@ function buildAssignedBook(
 	if (assignment.mode === 'library') {
 		const match = clubBooks.find((b) => b.id === assignment.libraryBookId)
 		if (match) {
+			// For an entity-backed pick, snapshot the title/author/url alongside the bookEntityId so
+			// the assignment survives the book later being removed from the reading list (see
+			// `assignmentFormValue`'s fallback below).
 			return match.bookEntityId
-				? { bookEntityId: match.bookEntityId }
+				? {
+						bookEntityId: match.bookEntityId,
+						title: match.title ?? null,
+						author: match.author ?? null,
+						url: match.url ?? null,
+					}
 				: {
 						title: match.title ?? null,
 						author: match.author ?? null,

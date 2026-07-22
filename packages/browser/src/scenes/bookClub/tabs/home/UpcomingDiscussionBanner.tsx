@@ -34,7 +34,7 @@ export default function UpcomingDiscussionBanner() {
 		data: {
 			bookClubById: { schedules },
 		},
-	} = useSuspenseGraphQL(query, sdk.cacheKey('bookClubById', [bookClub.id, 'schedules']), {
+	} = useSuspenseGraphQL(query, sdk.cacheKey('bookClubById', [bookClub.id, 'upcomingDiscussion']), {
 		id: bookClub.id,
 	})
 

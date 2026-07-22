@@ -1,21 +1,24 @@
 import { BookClubScheduleKind } from '@stump/graphql'
 
 import {
+	assignmentFormValue,
 	buildScheduleInput,
 	ClubBookOption,
 	computeDefaultPeriod,
+	editingFormValues,
 	emptyFormValues,
 	scheduleFormSchema,
 	ScheduleFormValues,
 } from '../scheduleForm'
+import { IntervalAssignment } from '../types'
 
 const clubBooks: ClubBookOption[] = [
 	{
 		id: 'club-book-1',
 		label: 'Dune',
 		bookEntityId: 'entity-1',
-		title: null,
-		author: null,
+		title: 'Dune',
+		author: 'Frank Herbert',
 		url: null,
 	},
 	{
@@ -83,7 +86,7 @@ describe('buildScheduleInput', () => {
 		expect((input.config as { recurrence: string | null }).recurrence).toBeNull()
 	})
 
-	it('resolves a library-picked assignment to its bookEntityId', () => {
+	it('resolves a library-picked assignment to its bookEntityId, snapshotting title/author/url', () => {
 		const values: ScheduleFormValues = {
 			...emptyFormValues,
 			kind: BookClubScheduleKind.IntervalBooks,
@@ -110,7 +113,12 @@ describe('buildScheduleInput', () => {
 				{
 					startsOn: '2026-08-01',
 					endsOn: '2026-08-14',
-					book: { bookEntityId: 'entity-1' },
+					book: {
+						bookEntityId: 'entity-1',
+						title: 'Dune',
+						author: 'Frank Herbert',
+						url: null,
+					},
 				},
 			],
 		})
@@ -170,6 +178,126 @@ describe('buildScheduleInput', () => {
 			author: null,
 			url: null,
 		})
+	})
+})
+
+describe('assignmentFormValue', () => {
+	it('rehydrates into library mode when the bookEntityId still matches a club book', () => {
+		const assignment: IntervalAssignment = {
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			book: {
+				bookEntityId: 'entity-1',
+				title: 'Dune',
+				author: 'Frank Herbert',
+				url: null,
+			},
+		}
+
+		const value = assignmentFormValue(assignment, clubBooks)
+		expect(value).toEqual({
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			mode: 'library',
+			libraryBookId: 'club-book-1',
+			title: '',
+			author: '',
+			url: '',
+		})
+	})
+
+	it('falls back to manual mode populated from the snapshot when the entity is no longer in the reading list', () => {
+		const assignment: IntervalAssignment = {
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			book: {
+				bookEntityId: 'entity-removed',
+				title: 'Dune',
+				author: 'Frank Herbert',
+				url: 'https://example.com/dune',
+			},
+		}
+
+		const value = assignmentFormValue(assignment, clubBooks)
+		expect(value).toEqual({
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			mode: 'manual',
+			libraryBookId: '',
+			title: 'Dune',
+			author: 'Frank Herbert',
+			url: 'https://example.com/dune',
+		})
+	})
+
+	it('falls back to manual mode with empty fields when there is no snapshot and no bookEntityId', () => {
+		const assignment: IntervalAssignment = {
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			book: {},
+		}
+
+		const value = assignmentFormValue(assignment, clubBooks)
+		expect(value).toEqual({
+			startsOn: '2026-08-01',
+			endsOn: '2026-08-14',
+			mode: 'manual',
+			libraryBookId: '',
+			title: '',
+			author: '',
+			url: '',
+		})
+	})
+})
+
+describe('editingFormValues', () => {
+	it('rehydrates interval assignments, keeping the snapshot when the club book was removed', () => {
+		const schedule = {
+			name: 'Reading plan',
+			kind: BookClubScheduleKind.IntervalBooks,
+			config: {
+				interval: { every: 1, unit: 'WEEK', anchor: '2026-08-01' },
+				assignments: [
+					{
+						startsOn: '2026-08-01',
+						endsOn: '2026-08-07',
+						book: { bookEntityId: 'entity-1', title: 'Dune', author: 'Frank Herbert', url: null },
+					},
+					{
+						startsOn: '2026-08-08',
+						endsOn: '2026-08-14',
+						book: {
+							bookEntityId: 'entity-removed',
+							title: 'Old Book',
+							author: 'Old Author',
+							url: null,
+						},
+					},
+				],
+			},
+		}
+
+		const values = editingFormValues(schedule, clubBooks)
+		expect(values.assignments).toEqual([
+			{
+				startsOn: '2026-08-01',
+				endsOn: '2026-08-07',
+				mode: 'library',
+				libraryBookId: 'club-book-1',
+				title: '',
+				author: '',
+				url: '',
+			},
+			{
+				startsOn: '2026-08-08',
+				endsOn: '2026-08-14',
+				mode: 'manual',
+				libraryBookId: '',
+				title: 'Old Book',
+				author: 'Old Author',
+				url: '',
+			},
+		])
 	})
 })
 
