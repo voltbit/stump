@@ -3,6 +3,7 @@ import { useGraphQL, useGraphQLMutation, useSDK } from '@stump/client'
 import { Button, ComboBox, Dialog, Form, Input, Label, NativeSelect } from '@stump/components'
 import { BookClubMemberRole, extractErrorMessage, graphql } from '@stump/graphql'
 import { BookClubMemberRoleSpec } from '@stump/sdk'
+import { AlertTriangle } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -56,12 +57,28 @@ export default function AddMemberDialog({
 	const { sdk } = useSDK()
 
 	// Only fetch the candidate user list while the dialog is actually open
-	const { data: usersData } = useGraphQL(
+	const { data: usersData, error: usersError } = useGraphQL(
 		usersQuery,
 		sdk.cacheKey('users', ['unpaginated']),
 		undefined,
 		{ enabled: isOpen },
 	)
+
+	const usersErrorMessage = usersError
+		? extractErrorMessage(usersError, 'You may not have permission to view the server user list')
+		: undefined
+
+	useEffect(() => {
+		if (!usersError) return
+
+		console.error('Error fetching candidate users:', usersError)
+		toast.error('Failed to load users', {
+			description: extractErrorMessage(
+				usersError,
+				'You may not have permission to view the server user list',
+			),
+		})
+	}, [usersError])
 
 	const userOptions = useMemo(
 		() => buildUserOptions(usersData?.users.nodes ?? [], excludedUserIds),
@@ -111,6 +128,13 @@ export default function AddMemberDialog({
 				</Dialog.Header>
 
 				<Form id="add-book-club-member" form={form} onSubmit={handleSubmit}>
+					{usersErrorMessage && (
+						<div className="px-3 py-2 text-xs gap-2 flex items-start rounded-md border border-destructive/30 bg-destructive/10 text-destructive">
+							<AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+							<span>Couldn&apos;t load users: {usersErrorMessage}</span>
+						</div>
+					)}
+
 					<div className="gap-1.5 flex flex-col">
 						<ComboBox
 							label="User"
@@ -119,10 +143,15 @@ export default function AddMemberDialog({
 							onChange={(value) => form.setValue('userId', value ?? '', { shouldValidate: true })}
 							filterable
 							size="full"
+							disabled={!!usersErrorMessage}
 							placeholder="Select a user..."
 							filterPlaceholder="Search users..."
 							filterEmptyMessage={
-								userOptions.length ? 'No matching users' : 'No users available to add'
+								usersErrorMessage
+									? 'Unable to load users'
+									: userOptions.length
+										? 'No matching users'
+										: 'No users available to add'
 							}
 						/>
 						{form.formState.errors.userId && (

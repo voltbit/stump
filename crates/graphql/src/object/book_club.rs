@@ -102,6 +102,14 @@ impl BookClub {
 	}
 
 	/// All schedules configured for this book club
+	//
+	// NOTE(guard-asymmetry, intentional): this field is unguarded beyond the club-visibility
+	// check already enforced by `bookClubById`, matching the sibling `books`/`members` fields
+	// on this object - reachability here follows "can you see the club" convention. The
+	// standalone `bookClubSchedules` query in `query/book_club_schedule.rs` additionally
+	// applies a `BookClubRoleGuard` (Member role) because it's a direct API entry point with
+	// no other access check upstream. Do not "fix" this by adding a role guard here, or by
+	// removing the one on the standalone query - the two are deliberately asymmetric.
 	async fn schedules(&self, ctx: &Context<'_>) -> Result<Vec<BookClubSchedule>> {
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
 

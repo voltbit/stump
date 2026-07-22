@@ -1,6 +1,6 @@
 import { useGraphQLMutation, useSDK, useSuspenseGraphQL } from '@stump/client'
-import { Avatar, Button, Card } from '@stump/components'
-import { BookClubMembersTableQuery, graphql } from '@stump/graphql'
+import { Avatar, Button, Card, ToolTip } from '@stump/components'
+import { BookClubMembersTableQuery, graphql, UserPermission } from '@stump/graphql'
 import { BookClubMemberRoleSpec } from '@stump/sdk'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import upperFirst from 'lodash/upperFirst'
@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Table } from '@/components/table'
-import { useAppContext } from '@/context'
+import { useAppContext, useCheckPermission } from '@/context'
 
 import { useBookClubManagement } from '../context'
 import AddMemberDialog from './AddMemberDialog'
@@ -43,6 +43,7 @@ const removeMutation = graphql(`
 export default function MembersTable() {
 	const { sdk } = useSDK()
 	const { user } = useAppContext()
+	const canReadUsers = useCheckPermission(UserPermission.ReadUsers)
 	const {
 		club: { id, roleSpec },
 	} = useBookClubManagement()
@@ -57,7 +58,7 @@ export default function MembersTable() {
 
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
 	const pageCount = useMemo(
-		() => Math.ceil(members?.length ?? 0 / pagination.pageSize),
+		() => Math.ceil((members?.length ?? 0) / pagination.pageSize),
 		[members, pagination.pageSize],
 	)
 
@@ -115,10 +116,21 @@ export default function MembersTable() {
 				}}
 			/>
 			<div className="mb-4 flex justify-end">
-				<Button variant="secondary" size="sm" onClick={() => setIsAddingMember(true)}>
-					<UserPlus className="mr-2 h-4 w-4" />
-					Add member
-				</Button>
+				<ToolTip
+					content='Requires the "Read users" server permission'
+					isDisabled={canReadUsers}
+					align="end"
+				>
+					<Button
+						variant="secondary"
+						size="sm"
+						onClick={() => setIsAddingMember(true)}
+						disabled={!canReadUsers}
+					>
+						<UserPlus className="mr-2 h-4 w-4" />
+						Add member
+					</Button>
+				</ToolTip>
 			</div>
 			<Card>
 				<Table
