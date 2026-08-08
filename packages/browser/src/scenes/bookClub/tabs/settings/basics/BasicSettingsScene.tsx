@@ -3,7 +3,7 @@ import { useSDK, useSuspenseGraphQL } from '@stump/client'
 import { Button, Form } from '@stump/components'
 import { extractErrorMessage, graphql } from '@stump/graphql'
 import { useLocaleContext } from '@stump/i18n'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -47,14 +47,9 @@ export default function BasicSettingsScene() {
 		resolver: zodResolver(schema),
 	})
 
-	// Once the patch succeeds, the club in cache reflects the saved values - resync the form so
-	// it visibly reflects saved state without requiring a manual refresh
-	useEffect(() => {
-		form.reset(formDefaults(club))
-	}, [club, form])
-
 	const handleSubmit = useCallback(
-		({ name, description, isPrivate, emoji }: CreateOrUpdateBookClubSchema) => {
+		(values: CreateOrUpdateBookClubSchema) => {
+			const { name, description, isPrivate, emoji } = values
 			patch(
 				{
 					description,
@@ -63,7 +58,16 @@ export default function BasicSettingsScene() {
 					name,
 				},
 				{
-					onSuccess: () => toast.success('Book club updated'),
+					// Reset the form's "clean" baseline to exactly what was just submitted, so it
+					// visibly reflects saved state without requiring a manual refresh. This is scoped
+					// to *this* form's own successful submission - deliberately not a `useEffect` keyed
+					// off the shared `club` object, which would re-fire (and silently discard any
+					// unsubmitted edit in progress here) whenever *any* settings tab patches the club,
+					// e.g. a role-label save in MemberSpecDisplay, or a background refetch.
+					onSuccess: () => {
+						toast.success('Book club updated')
+						form.reset(values)
+					},
 					onError: (error) => {
 						console.error('Error updating book club:', error)
 						toast.error('Failed to update book club', { description: extractErrorMessage(error) })
@@ -71,7 +75,7 @@ export default function BasicSettingsScene() {
 				},
 			)
 		},
-		[patch],
+		[patch, form],
 	)
 
 	return (

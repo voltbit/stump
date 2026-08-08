@@ -1,6 +1,11 @@
 import { FORBIDDEN_ENTITY_NAMES } from '@/utils/form'
 
-import { buildSchema, type CreateOrUpdateBookClubSchema, defaultMemberSpec } from '../schema'
+import {
+	buildSchema,
+	type CreateOrUpdateBookClubSchema,
+	defaultMemberSpec,
+	formDefaults,
+} from '../schema'
 
 const translateFn = jest.fn((key: string) => key)
 
@@ -23,6 +28,8 @@ const createClub = (
 })
 
 describe('createOrUpdateBookClubForm schema', () => {
+	// NOTE: despite the name, these exercise buildSchema()'s parse-time defaulting, not the
+	// formDefaults() function - see the `formDefaults()` describe block below for that
 	describe('formDefaults', () => {
 		it('should default creatorHideProgress to false when creating', () => {
 			const schema = buildSchema(translateFn, [], true)
@@ -47,6 +54,56 @@ describe('createOrUpdateBookClubForm schema', () => {
 			const schema = buildSchema(translateFn, [], false)
 			const club = createClub()
 			expect(schema.parse(club)).toEqual(club)
+		})
+	})
+
+	describe('formDefaults()', () => {
+		const club = {
+			description: 'An "Our Flag Means Death" fan club',
+			emoji: '🏴‍☠️',
+			isPrivate: true,
+			name: 'Pirate Club',
+			roleSpec: defaultMemberSpec,
+		} as any
+
+		it('preserves the club description instead of always resetting it to empty', () => {
+			// Regression test: formDefaults() used to hardcode description to '', so saving the
+			// Basics form for any reason (even just toggling privacy) would silently blank out an
+			// existing club's description
+			expect(formDefaults(club).description).toBe('An "Our Flag Means Death" fan club')
+		})
+
+		it('falls back to an empty description when the club has none', () => {
+			expect(formDefaults({ ...club, description: null }).description).toBe('')
+		})
+
+		it('preserves the club emoji', () => {
+			expect(formDefaults(club).emoji).toBe('🏴‍☠️')
+		})
+
+		it('falls back to undefined emoji when the club has none', () => {
+			expect(formDefaults({ ...club, emoji: null }).emoji).toBeUndefined()
+		})
+
+		it('maps isPrivate and name from the club', () => {
+			const defaults = formDefaults(club)
+			expect(defaults.isPrivate).toBe(true)
+			expect(defaults.name).toBe('Pirate Club')
+		})
+
+		it("maps the club's roleSpec to memberRoleSpec", () => {
+			expect(formDefaults(club).memberRoleSpec).toEqual(defaultMemberSpec)
+		})
+
+		it('returns empty/falsy defaults when no club is provided (creating)', () => {
+			expect(formDefaults(undefined)).toEqual({
+				creatorDisplayName: '',
+				description: '',
+				emoji: undefined,
+				isPrivate: false,
+				memberRoleSpec: undefined,
+				name: '',
+			})
 		})
 	})
 
