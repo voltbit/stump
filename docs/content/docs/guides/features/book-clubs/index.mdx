@@ -2,12 +2,6 @@
 title: Book Clubs
 ---
 
-<Callout type="warn">
-	This feature is not yet stable and is under active development. You can track the progress on this
-	feature in [this issue](https://github.com/stumpapp/stump/issues/120). This is a personal favorite
-	feature of mine, so I'd love to get it out as soon as possible.
-</Callout>
-
 <Callout title="Permission required">
 	This functionality is gated behind the `ACCESS_BOOK_CLUB` user permission. To learn more about
 	permissions, see the [Permissions](/docs/guides/access-control/permissions) guide.
@@ -22,11 +16,27 @@ To set up a book club in Stump, you'll need:
 - A Stump instance
 - A managed user account (otherwise, it would be a club of one)
 
-You don't even technically need any books on the server to start a book club, either, since you can create book club schedules with 'external' books.
+You don't even technically need any books on the server to start a book club, either, since a club's reading list, schedules, and suggestions can all reference 'external' books (a title/author/URL) instead of a book stored in one of your libraries.
 
 ## How it works
 
 Book clubs in Stump are effectively just a group of users that all have access to special pages and functionalities that are only available to members of a given book club. There can be multiple book clubs in a single Stump instance, and users can be members of multiple book clubs.
+
+Creating a club makes you its **Creator** and its first member. Beyond that, membership is by invitation or by a club Admin/Creator adding you directly — see the [Roles and Permissions](/docs/guides/features/book-clubs/rbac) guide for how clubs are discovered, how invitations work, and what each role can do.
+
+Once you're a member of a club, a few more tabs become available on the club's page:
+
+- **Suggestions** — propose and vote on what the club should read next, see the [Books, Reading List & Suggestions](/docs/guides/features/book-clubs/books) guide
+- **Members** — the club's roster
+- **Settings** — general club info, member management, role labels, the reading list, and scheduling. Any member can open Settings, but most of what's in it (editing club info, managing members and invitations, the reading list, and schedules) is Admin/Creator-only — see [Roles and Permissions](/docs/guides/features/book-clubs/rbac)
+
+## Web vs. mobile
+
+Book clubs work on both the web app and the mobile app, but they don't (yet) have identical surfaces:
+
+- **Discovering, suggesting, and organizing** — the Explore page, the Members roster, the Suggestions tab, and full reading list/scheduling management (in Settings) are currently **web only**.
+- **Discussions/chat** are currently **mobile only** — see [Social Features](/docs/guides/features/book-clubs/social-features).
+- Clubs list, creating a club, invitations (viewing/accepting/declining), the club home page (including adding and completing the current book, and a preview of a few members), and basic club settings (info, leaving, deleting) work on **both**.
 
 <Callout type="idea">
 	If you have any other ideas, please feel free to open an

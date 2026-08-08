@@ -4,14 +4,32 @@ title: Roles and Permissions
 
 There are two relevant user permissions that affect access to the book club feature as a whole:
 
-    1. Any managed account with the `ACCESS_BOOK_CLUB` permission may access the book club feature. This means that they can view and join book clubs
+    1. Any managed account with the `ACCESS_BOOK_CLUB` permission may access the book club feature. This means that they can view clubs they're a member of, discover public clubs, and be added to or accept invitations into clubs
     2. Any managed account with the `CREATE_BOOK_CLUB` permission may create book clubs (and therefore inherently has the `ACCESS_BOOK_CLUB` permission)
 
 The server owner can assign these permissions to other users in the user management settings page. For more information about that process, see the [user permissions](/docs/guides/access-control/permissions) guide.
 
 ## Club Visibility
 
-A club can be either public or private. Public clubs are visible to all users who have access to the book club feature, and they can join at any time. Private clubs are only visible to members of the club, and users must be invited by a club member to join. As with everything else, a server owner is not bound by these restrictions.
+A club can be either public or private. Public clubs can be discovered and previewed by anyone with access to the book club feature — see the [Explore](#discovering-clubs) page below. Private clubs are only visible to their members. As with everything else, a server owner is not bound by these restrictions and can see every club.
+
+Visibility only controls who can find and preview a club, not who can join it — see [Becoming a member](#becoming-a-member).
+
+## Discovering clubs
+
+The **Explore** page (linked from the clubs list) lists every public club on the server: its emoji, name, description, and member count, with a badge if you're already a member. It's discovery only — there's no "Join" button, since public clubs don't support self-service joining (see below). Selecting a club takes you to its home page, which anyone with book club access can view for a public club, even before joining. The Suggestions, Members, and Settings tabs, however, only appear once you're actually a member.
+
+Private clubs don't appear on the Explore page at all; you'll only ever see one if you're a member.
+
+## Becoming a member
+
+There is no self-service "join" for either public or private clubs. You become a member of a club in one of three ways:
+
+1. **You create it** — the creator is automatically the club's first member, with the Creator role.
+2. **You're invited and accept** — a club Admin or Creator sends you an invitation for a specific role (Member, Moderator, or Admin — never Creator); you can see your pending invitations wherever your clubs are listed, and accept or decline each one. Accepting adds you to the club with the role you were offered.
+3. **A club Admin or Creator adds you directly**, without an invitation.
+
+Only a club Admin or Creator can send an invitation or add a member directly.
 
 ## Club Roles
 
@@ -21,10 +39,16 @@ Within a book club, there are 4 roles:
 | ------------- | ------------------------------------------------------------------------------------------ |
 | **Creator**   | Full control over the book club, including deleting it at any time                         |
 | **Admin**     | Almost all of the same permissions as the creator, except they cannot delete the book club |
-| **Moderator** | Management permissions over club discussions and membership                                |
+| **Moderator** | Management permissions over club discussions (mobile app only, see below)                  |
 | **Member**    | No special permissions within the book club                                                |
 
 The server owner retains all of the permissions as a creator of any book club that exists on the server.
+
+Changing a member's role has its own rules, enforced regardless of who's asking:
+
+- You can never change your own role.
+- Nobody can change the Creator's role, or promote anyone to Creator — there's always exactly one Creator, set at club creation.
+- Granting or revoking the Admin role is Creator-only; a plain Admin can move members between Member and Moderator, but can't create or demote another Admin.
 
 ### Customizing Roles
 
@@ -43,10 +67,12 @@ Internally, nothing changes, but the names are displayed in the UI accordingly.
 
 The following table outlines some examples of what each role can do within a book club. This is not an exhaustive list, but over time hopefully it becomes more complete:
 
-| Permission                 | Example                             | Creator | Admin | Moderator | Member | Notes                                 |
-| -------------------------- | ----------------------------------- | ------- | ----- | --------- | ------ | ------------------------------------- |
-| Manage club settings       | Rename club, change settings        | ✅      | ✅    |           |        |                                       |
-| Manage books               | Mark book as reading for club       | ✅      | ✅    |           |        |                                       |
-| Manage discussions         | Delete an inappropriate message     | ✅      | ✅    | ✅        |        | Members can delete their own messages |
-| Suggest books              | Suggest a book for the club         | ✅      | ✅    | ✅        | ✅     |                                       |
-| Participate in discussions | Chat in the club's discussion rooms | ✅      | ✅    | ✅        | ✅     |                                       |
+| Permission                 | Example                                              | Creator | Admin | Moderator | Member | Notes                                                            |
+| --------------------------- | ---------------------------------------------------- | ------- | ----- | --------- | ------ | ----------------------------------------------------------------- |
+| Manage club settings        | Rename club, change privacy, relabel roles           | ✅      | ✅    |           |        |                                                                     |
+| Manage members              | Invite/add/remove a member, change a member's role   | ✅      | ✅    |           |        | Subject to the role-change rules above                            |
+| Manage reading list & schedules | Add/reorder/complete a book, create a schedule    | ✅      | ✅    |           |        |                                                                     |
+| Resolve suggestions         | Accept or reject a suggested book                    | ✅      | ✅    |           |        | Accepting can add the book straight to the reading list           |
+| Suggest and like books      | Suggest a book for the club, like a suggestion       | ✅      | ✅    | ✅        | ✅     |                                                                     |
+| Manage discussions          | Delete an inappropriate message                      | ✅      | ✅    | ✅        |        | Mobile app only — see [Social Features](/docs/guides/features/book-clubs/social-features); members can delete their own messages |
+| Participate in discussions  | Chat in the club's discussion rooms                  | ✅      | ✅    | ✅        | ✅     | Mobile app only — not available on web                            |

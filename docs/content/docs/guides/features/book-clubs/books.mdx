@@ -1,39 +1,42 @@
 ---
-title: Books
+title: Books, Reading List & Suggestions
 ---
 
-There are two types of books that can be added to a book club schedule:
+There are two types of books that can appear anywhere in a book club — the reading list, a schedule assignment, or a suggestion:
 
 1. **Internal books**: These are books that exist in the Stump library
-2. **External books**: These are books that do not exist in the Stump library, but can still be added to a book club via manual entry of the book's details (title, author, and optionally a cover image URL)
+2. **External books**: These are books that do not exist in the Stump library, but can still be added via manual entry of the book's details (title and author, with an optional URL for extra context)
+
+## Reading List
+
+A club's reading list is an ordered queue of books, managed from the club's Settings under **Reading List** (Admin/Creator only). For each book you can pick an internal book from your libraries or add an external one.
+
+- Books are ordered by position. The first book in the queue that hasn't been marked complete is the club's **current book**, shown on the club's home page.
+- Admins/Creators can reorder the queue (drag-and-drop on web) to change what's read next, and mark the current book complete once the club has finished it.
+- Completed books move into a read-only **Previously read** section, kept in the order they were finished.
+
+Only the current book can be marked complete — this keeps the "current book" shown elsewhere in the app in sync with what the reading list actually considers current, rather than letting an out-of-order book be marked done first.
 
 ## Scheduling
 
-There is no explicit scheduling features for book clubs yet. The general flow is that a book is designated as the 'current book' for a given book club, and then members read that book at their own pace. When the club is ready to move on, the current selection is archived and a new book is then selected.
+Club schedules live alongside the reading list, under Settings → **Scheduling** (Admin/Creator only). A club can have any number of schedules, each one of two kinds:
 
-This might change in the future to support users who want more powerful automations around scheduling, but for now this is the general process.
+- **Upcoming discussion** — a single planned date/time for the club to discuss its current book.
+- **Interval books** — a recurring cadence (every _N_ days/weeks/months) that assigns a book, from the reading list or entered manually, to each date range in the interval. Useful for clubs that want to commit to a pace (e.g. "a new book every 2 weeks") ahead of time rather than deciding one book at a time.
 
-## Book-Specific Discussions
-
-<Callout type="info">
-	See the [social features](/docs/guides/features/book-clubs/social-features) guide for more information
-	about discussions in book clubs
-</Callout>
+Schedules are informational — creating one doesn't itself change the reading list or the current book, it's a plan members can see and follow.
 
 ## Suggestions and Voting
 
-<Callout type="info" title="Work in progress">
-	This is not yet implemented, so present tense phrasing should be taken with a grain of salt. I
-	just don't want to delete and rewrite this section when I implement it
-</Callout>
+Any member of a club can suggest a book for the club to read, from the **Suggestions** tab (visible once you're a member). A suggestion carries an internal or external book, plus optional notes explaining the pick.
 
-Any member of a book club can suggest a book for the club to read. These suggestions are visible to all members of the club, and they can upvote suggestions that they like. I will not add any downvoting features, please don't ask.
+- Any member can suggest a book and like (upvote) suggestions from other members. There is no downvoting.
+- Suggestions are listed split into **Pending** (open for votes/action) and a read-only history of **Accepted**/**Rejected** ones, each showing who suggested it, when, and its like count.
+- Admins/Creators resolve a pending suggestion as either **Accept** or **Reject**, with an optional note. Accepting offers a "add to the reading list" option — when checked, the suggested book is appended to the end of the reading list in the same action as accepting it. Leaving it unchecked accepts the suggestion (e.g. to signal "we'll read this eventually") without immediately queueing it, so an admin can clear out several suggestions and order the reading list by hand afterward.
+- A suggestion can only be resolved once — once it's Accepted or Rejected, that decision (and who made it) is final and can't be re-resolved.
 
-The club admins can then view the list of suggestions and their respective upvotes, and use that information to help guide their decision on what book to select next.
+## Member profiles
 
-## Future Improvements
+Every member has a profile within a club: a display name, a short bio, a "hide my progress" preference, and a single favorite book (internal or external). If a member has set a display name, it's shown instead of their account username everywhere in the club (member lists, suggestions, etc.).
 
-Some features that I think would be nice to have:
-
-- Loose scheduling features, such as the ability to set a target date for finishing a book and some basic reminders around that
-- Automation around suggestions based on upvotes, such as the ability for club admins to configure a setting that will automatically make the most upvoted suggestion the current book once the current book is archived
+A member can update their own profile and favorite book, and a club Admin/Creator can change another member's role (subject to the [role rules](/docs/guides/features/book-clubs/rbac)). These are backed by the GraphQL API, but there isn't a dedicated screen for editing them in the web or mobile app yet.

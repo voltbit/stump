@@ -2,9 +2,10 @@
 title: Social Features
 ---
 
-<Callout title="Work in progress" type="idea">
-	This aspect isn't fully thought out yet. Please share ideas by opening an
-	[issue](https://github.com/stumpapp/stump/issues/new/choose) if you have any!
+<Callout type="warning" title="Not available on web">
+	Discussions are a **mobile app only** feature in this fork. The web app deliberately hides all
+	discussion tabs, routes, and links — there is no web chat, and none is planned for web in the near
+	term. Everything below applies to the mobile app.
 </Callout>
 
 ## Discussions
@@ -20,17 +21,19 @@ You can see the [book club books](/docs/guides/features/book-clubs/books) guide 
 
 The discussion rooms support basic chat features, such as:
 
-- Non-live chat (messages are only fetched when the page is loaded or manually refreshed)
+- Non-live chat (messages are only fetched when the room is opened or manually refreshed)
 - Reactions (emoji-based, with support for custom emojis)
 - Inline replies
 - Threaded discussions
 
+A Moderator (or higher) can lock/unlock a discussion, pin/unpin a message, and archive/unarchive a discussion. Any member can delete their own messages; Moderators and above can delete anyone's.
+
 ### Future Improvements
 
-While Stump is notably **not** a chat application, I will try to make these as functional as possible while still keeping the scope reasonable. Some features that I think would be nice to have:
+While Stump is notably **not** a chat application, these are kept reasonable in scope. Some features that would be nice to have:
 
-- Editing and deleting messages
-- Live chat (currently, messages are only fetched when the page is loaded or manually refreshed)
+- Editing messages
+- Live chat (currently, messages are only fetched when the room is opened or manually refreshed)
 - Better UX for message actions (e.g., double-tapping to edit, etc.)
 - @mentions with notifications and other typical chat-like features
 - Inline markdown support, mostly for things like spoilers and inline emojis
@@ -42,3 +45,7 @@ While Stump is notably **not** a chat application, I will try to make these as f
 </Callout>
 
 The chat features are not and will not be designed to be a secure messaging platform. It is purely meant for casual discussions around books, and should not be used for anything that requires a high level of security or privacy. Messages are stored in plaintext in the database without encryption, and there are no plans to change this.
+
+## Member profiles
+
+Beyond discussions, each member has a small profile within a club — a display name, a bio, a favorite book, and a preference to hide their reading progress from other members. See the [member profiles](/docs/guides/features/book-clubs/books#member-profiles) section of the books guide for details.
