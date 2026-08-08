@@ -52,4 +52,5 @@ export const cacheKeys = {
 	bookClubs: 'bookClubs',
 	bookClubById: 'bookClubById',
 	bookClubBySlug: 'bookClubBySlug',
+	myBookClubInvitations: 'myBookClubInvitations',
 } as const

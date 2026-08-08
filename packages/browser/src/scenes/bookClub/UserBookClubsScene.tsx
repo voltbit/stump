@@ -7,6 +7,8 @@ import { Helmet } from 'react-helmet'
 import { SceneContainer } from '@/components/container'
 import paths from '@/paths'
 
+import MyBookClubInvitations from './MyBookClubInvitations'
+
 // TODO(book-clubs): This query needs a complete rewrite
 const query = graphql(`
 	query UserBookClubsScene {
@@ -110,6 +112,8 @@ export default function UserBookClubsScene() {
 			<Helmet>
 				<title>Stump | Book Clubs</title>
 			</Helmet>
+
+			<MyBookClubInvitations />
 
 			{renderContent()}
 		</SceneContainer>
