@@ -2,7 +2,7 @@ import { useGraphQL, useSDK } from '@stump/client'
 import { Badge, Button, Card, Heading, Text, ToolTip } from '@stump/components'
 import { extractErrorMessage, graphql, UserPermission } from '@stump/graphql'
 import upperFirst from 'lodash/upperFirst'
-import { Mail, UserPlus } from 'lucide-react'
+import { AlertTriangle, Mail, UserPlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -55,6 +55,9 @@ export default function PendingInvitations() {
 		toast.error('Failed to load pending invitations', { description: extractErrorMessage(error) })
 	}, [error])
 
+	const errorMessage = error
+		? extractErrorMessage(error, 'Failed to load pending invitations')
+		: undefined
 	const invitations = data?.bookClubById.invitations ?? []
 
 	return (
@@ -89,7 +92,14 @@ export default function PendingInvitations() {
 				}}
 			/>
 
-			{canReadUsers && invitations.length === 0 && (
+			{canReadUsers && errorMessage && (
+				<div className="px-3 py-2 text-xs gap-2 flex items-start rounded-md border border-destructive/30 bg-destructive/10 text-destructive">
+					<AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+					<span>Couldn&apos;t load pending invitations: {errorMessage}</span>
+				</div>
+			)}
+
+			{canReadUsers && !errorMessage && invitations.length === 0 && (
 				<GenericEmptyState
 					title="No pending invitations"
 					subtitle="Invited users will appear here until they respond"
@@ -98,7 +108,7 @@ export default function PendingInvitations() {
 				/>
 			)}
 
-			{invitations.length > 0 && (
+			{!errorMessage && invitations.length > 0 && (
 				<div className="gap-3 flex flex-col">
 					{invitations.map((invitation) => (
 						<Card key={invitation.id} className="gap-3 p-3 flex items-center justify-between">
