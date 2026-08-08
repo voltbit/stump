@@ -6193,10 +6193,11 @@ export type UpcomingDiscussionBannerQuery = { __typename?: 'Query', bookClubById
 
 export type BookClubMembersListQueryVariables = Exact<{
   id: Scalars['ID']['input'];
+  pagination?: InputMaybe<Pagination>;
 }>;
 
 
-export type BookClubMembersListQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, displayName?: string | null, isCreator: boolean, role: BookClubMemberRole }> } } };
+export type BookClubMembersListQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, displayName?: string | null, isCreator: boolean, role: BookClubMemberRole }>, pageInfo: { __typename: 'CursorPaginationInfo', currentCursor?: string | null, nextCursor?: string | null, limit: number } | { __typename: 'OffsetPaginationInfo' } } } };
 
 export type BookClubBasicSettingsSceneQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -11842,16 +11843,24 @@ export const UpcomingDiscussionBannerDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<UpcomingDiscussionBannerQuery, UpcomingDiscussionBannerQueryVariables>;
 export const BookClubMembersListDocument = new TypedDocumentString(`
-    query BookClubMembersList($id: ID!) {
+    query BookClubMembersList($id: ID!, $pagination: Pagination) {
   bookClubById(id: $id) {
     id
-    members {
+    members(pagination: $pagination) {
       nodes {
         id
         avatarUrl
         displayName
         isCreator
         role
+      }
+      pageInfo {
+        __typename
+        ... on CursorPaginationInfo {
+          currentCursor
+          nextCursor
+          limit
+        }
       }
     }
   }

@@ -1,15 +1,15 @@
-import { useSDK, useSuspenseGraphQL } from '@stump/client'
-import { Avatar, Card, Text } from '@stump/components'
+import { useInfiniteSuspenseGraphQL, useSDK } from '@stump/client'
+import { Avatar, Button, Card, Text } from '@stump/components'
 import { graphql } from '@stump/graphql'
 import upperFirst from 'lodash/upperFirst'
 
 import { useBookClubContext } from '@/components/bookClub'
 
 const query = graphql(`
-	query BookClubMembersList($id: ID!) {
+	query BookClubMembersList($id: ID!, $pagination: Pagination) {
 		bookClubById(id: $id) {
 			id
-			members {
+			members(pagination: $pagination) {
 				nodes {
 					id
 					avatarUrl
@@ -17,13 +17,25 @@ const query = graphql(`
 					isCreator
 					role
 				}
+				pageInfo {
+					__typename
+					... on CursorPaginationInfo {
+						currentCursor
+						nextCursor
+						limit
+					}
+				}
 			}
 		}
 	}
 `)
 
 /**
- * A read-only listing of a book club's members, visible to anyone who can view the club
+ * A read-only listing of a book club's members, visible to anyone who can view the club.
+ * Cursor-paginated with a "Load more" button (following the same
+ * `useInfiniteSuspenseGraphQL` + `fetchNextPage`/`hasNextPage` pattern as
+ * `BooksAfterCursor`/`LibrarySeriesGrid`) so clubs with more members than the default
+ * page size don't silently truncate the list.
  */
 export default function BookClubMembersScene() {
 	const { sdk } = useSDK()
@@ -31,13 +43,16 @@ export default function BookClubMembersScene() {
 		bookClub: { id, roleSpec },
 	} = useBookClubContext()
 
-	const {
-		data: {
-			bookClubById: {
-				members: { nodes: members },
-			},
+	const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteSuspenseGraphQL(
+		query,
+		sdk.cacheKey('bookClubById', [id, 'membersList']),
+		{
+			id,
+			pagination: { cursor: { limit: 20 } },
 		},
-	} = useSuspenseGraphQL(query, sdk.cacheKey('bookClubById', [id, 'membersList']), { id })
+	)
+
+	const members = data.pages.flatMap((page) => page.bookClubById.members.nodes)
 
 	if (!members.length) {
 		return (
@@ -48,18 +63,31 @@ export default function BookClubMembersScene() {
 	}
 
 	return (
-		<Card className="divide-y divide-border">
-			{members.map(({ id: memberId, avatarUrl, displayName, isCreator, role }) => (
-				<div key={memberId} className="gap-3 p-3 flex items-center">
-					<Avatar src={avatarUrl ?? undefined} fallback={displayName} />
-					<div className="min-w-0 flex flex-col">
-						<Text className="truncate">{displayName}</Text>
-						<Text size="sm" variant="muted">
-							{isCreator ? 'Creator' : roleSpec[role] || upperFirst(role.toLowerCase())}
-						</Text>
+		<div className="gap-3 flex flex-col">
+			<Card className="divide-y divide-border">
+				{members.map(({ id: memberId, avatarUrl, displayName, isCreator, role }) => (
+					<div key={memberId} className="gap-3 p-3 flex items-center">
+						<Avatar src={avatarUrl ?? undefined} fallback={displayName} />
+						<div className="min-w-0 flex flex-col">
+							<Text className="truncate">{displayName}</Text>
+							<Text size="sm" variant="muted">
+								{isCreator ? 'Creator' : roleSpec[role] || upperFirst(role.toLowerCase())}
+							</Text>
+						</div>
 					</div>
-				</div>
-			))}
-		</Card>
+				))}
+			</Card>
+
+			{hasNextPage && (
+				<Button
+					variant="secondary"
+					size="sm"
+					onClick={() => fetchNextPage()}
+					disabled={isFetchingNextPage}
+				>
+					{isFetchingNextPage ? 'Loading...' : 'Load more'}
+				</Button>
+			)}
+		</div>
 	)
 }

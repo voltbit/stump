@@ -186,7 +186,7 @@ type Documents = {
     "\n\tquery CreateBookClubForm {\n\t\tbookClubs {\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.CreateBookClubFormDocument,
     "\n\tmutation CreateBookClubScene($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.CreateBookClubSceneDocument,
     "\n\tquery UpcomingDiscussionBanner($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\tkind\n\t\t\t\tconfig\n\t\t\t}\n\t\t}\n\t}\n": typeof types.UpcomingDiscussionBannerDocument,
-    "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubMembersListDocument,
+    "\n\tquery BookClubMembersList($id: ID!, $pagination: Pagination) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers(pagination: $pagination) {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t\tpageInfo {\n\t\t\t\t\t__typename\n\t\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\t\tcurrentCursor\n\t\t\t\t\t\tnextCursor\n\t\t\t\t\t\tlimit\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubMembersListDocument,
     "\n\tquery BookClubBasicSettingsScene {\n\t\tbookClubs(all: true) {\n\t\t\tid\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.BookClubBasicSettingsSceneDocument,
     "\n\tquery AddBookClubMemberUsers {\n\t\tusers(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": typeof types.AddBookClubMemberUsersDocument,
     "\n\tquery AddBookClubMemberExistingMembers($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers(pagination: { none: { unpaginated: true } }) {\n\t\t\t\tnodes {\n\t\t\t\t\tuserId\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.AddBookClubMemberExistingMembersDocument,
@@ -499,7 +499,7 @@ const documents: Documents = {
     "\n\tquery CreateBookClubForm {\n\t\tbookClubs {\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": types.CreateBookClubFormDocument,
     "\n\tmutation CreateBookClubScene($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": types.CreateBookClubSceneDocument,
     "\n\tquery UpcomingDiscussionBanner($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tschedules {\n\t\t\t\tid\n\t\t\t\tkind\n\t\t\t\tconfig\n\t\t\t}\n\t\t}\n\t}\n": types.UpcomingDiscussionBannerDocument,
-    "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubMembersListDocument,
+    "\n\tquery BookClubMembersList($id: ID!, $pagination: Pagination) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers(pagination: $pagination) {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t\tpageInfo {\n\t\t\t\t\t__typename\n\t\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\t\tcurrentCursor\n\t\t\t\t\t\tnextCursor\n\t\t\t\t\t\tlimit\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubMembersListDocument,
     "\n\tquery BookClubBasicSettingsScene {\n\t\tbookClubs(all: true) {\n\t\t\tid\n\t\t\tname\n\t\t\tslug\n\t\t}\n\t}\n": types.BookClubBasicSettingsSceneDocument,
     "\n\tquery AddBookClubMemberUsers {\n\t\tusers(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": types.AddBookClubMemberUsersDocument,
     "\n\tquery AddBookClubMemberExistingMembers($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers(pagination: { none: { unpaginated: true } }) {\n\t\t\t\tnodes {\n\t\t\t\t\tuserId\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.AddBookClubMemberExistingMembersDocument,
@@ -1328,7 +1328,7 @@ export function graphql(source: "\n\tquery UpcomingDiscussionBanner($id: ID!) {\
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n\tquery BookClubMembersList($id: ID!) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n"): typeof import('./graphql').BookClubMembersListDocument;
+export function graphql(source: "\n\tquery BookClubMembersList($id: ID!, $pagination: Pagination) {\n\t\tbookClubById(id: $id) {\n\t\t\tid\n\t\t\tmembers(pagination: $pagination) {\n\t\t\t\tnodes {\n\t\t\t\t\tid\n\t\t\t\t\tavatarUrl\n\t\t\t\t\tdisplayName\n\t\t\t\t\tisCreator\n\t\t\t\t\trole\n\t\t\t\t}\n\t\t\t\tpageInfo {\n\t\t\t\t\t__typename\n\t\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\t\tcurrentCursor\n\t\t\t\t\t\tnextCursor\n\t\t\t\t\t\tlimit\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n"): typeof import('./graphql').BookClubMembersListDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
