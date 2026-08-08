@@ -5027,7 +5027,7 @@ export type BookClubsScreenQuery = { __typename?: 'Query', bookClubs: Array<(
 export type BookClubInvitesScreenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type BookClubInvitesScreenQuery = { __typename?: 'Query', myBookClubInvitations: Array<{ __typename?: 'BookClubInvitation', id: string, role: BookClubMemberRole, bookClubId: string, bookClub: { __typename?: 'BookClub', name: string, description?: string | null, membersCount: number } }> };
+export type BookClubInvitesScreenQuery = { __typename?: 'Query', myBookClubInvitations: Array<{ __typename?: 'BookClubInvitation', id: string, role: BookClubMemberRole, bookClubId: string, bookClub: { __typename?: 'BookClub', name: string, description?: string | null, membersCount: number, emoji?: string | null } }> };
 
 export type RespondToBookClubInvitationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -8428,6 +8428,7 @@ export const BookClubInvitesScreenDocument = new TypedDocumentString(`
       name
       description
       membersCount
+      emoji
     }
   }
 }
