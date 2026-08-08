@@ -99,13 +99,25 @@ export default function Screen() {
 			})
 			queryClient.invalidateQueries({ queryKey: ['bookClubById', clubId] })
 			queryClient.invalidateQueries({ queryKey: ['bookClubContext', clubId] })
+			queryClient.invalidateQueries({ queryKey: ['bookClubs', serverID] })
 			router.back()
 		} catch (error) {
 			toast.error('Failed to update club', {
 				description: error instanceof Error ? error.message : 'An unknown error occurred',
 			})
 		}
-	}, [canSubmit, updateClub, clubId, name, description, isPrivate, club.emoji, queryClient, router])
+	}, [
+		canSubmit,
+		updateClub,
+		clubId,
+		name,
+		description,
+		isPrivate,
+		club.emoji,
+		queryClient,
+		serverID,
+		router,
+	])
 
 	const navigation = useNavigation()
 	useLayoutEffect(() => {
