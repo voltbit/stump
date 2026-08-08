@@ -1,13 +1,13 @@
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use models::{
-	entity::{book_club_member, user},
+	entity::{book_club_member, book_club_member_favorite_book, user},
 	shared::book_club::BookClubMemberRole,
 };
 use sea_orm::{prelude::*, QuerySelect};
 
 use crate::{
 	data::{CoreContext, ServiceContext},
-	object::user::User,
+	object::{book_club_member_favorite_book::BookClubMemberFavoriteBook, user::User},
 };
 
 #[derive(Debug, SimpleObject)]
@@ -77,5 +77,20 @@ impl BookClubMember {
 
 	async fn is_creator(&self) -> bool {
 		self.model.role == BookClubMemberRole::Creator
+	}
+
+	/// The member's favorite book, if they have set one
+	async fn favorite_book(
+		&self,
+		ctx: &Context<'_>,
+	) -> Result<Option<BookClubMemberFavoriteBook>> {
+		let core = ctx.data::<CoreContext>()?;
+
+		let favorite_book =
+			book_club_member_favorite_book::Entity::find_by_member_id(&self.model.id)
+				.one(core.conn.as_ref())
+				.await?;
+
+		Ok(favorite_book.map(BookClubMemberFavoriteBook::from))
 	}
 }

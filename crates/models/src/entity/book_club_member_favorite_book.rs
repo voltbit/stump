@@ -1,6 +1,8 @@
+use async_graphql::SimpleObject;
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[graphql(name = "BookClubMemberFavoriteBookModel")]
 #[sea_orm(table_name = "book_club_member_favorite_books")]
 pub struct Model {
 	#[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
@@ -54,3 +56,27 @@ impl Related<super::media::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+impl Entity {
+	/// Find the favorite book row for a given member, if one has been set. There is at
+	/// most one favorite book per member (enforced by a unique constraint on `member_id`).
+	pub fn find_by_member_id(member_id: &str) -> Select<Entity> {
+		Entity::find().filter(Column::MemberId.eq(member_id))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::tests::common::*;
+	use pretty_assertions::assert_eq;
+
+	#[test]
+	fn test_find_by_member_id() {
+		let select = Entity::find_by_member_id("member-1");
+		assert_eq!(
+			select_no_cols_to_string(select),
+			r#"SELECT  FROM "book_club_member_favorite_books" WHERE "book_club_member_favorite_books"."member_id" = 'member-1'"#
+		);
+	}
+}
