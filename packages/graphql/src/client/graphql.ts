@@ -6160,7 +6160,7 @@ export type BookClubLayoutQueryVariables = Exact<{
 }>;
 
 
-export type BookClubLayoutQuery = { __typename?: 'Query', bookClubBySlug?: { __typename?: 'BookClub', id: string, name: string, slug: string, description?: string | null, isPrivate: boolean, roleSpec: any, membersCount: number, createdAt: any, creator: { __typename?: 'BookClubMember', id: string, displayName?: string | null, avatarUrl?: string | null }, membership?: { __typename?: 'BookClubMember', role: BookClubMemberRole, avatarUrl?: string | null, isCreator: boolean } | null, currentBook?: (
+export type BookClubLayoutQuery = { __typename?: 'Query', bookClubBySlug?: { __typename?: 'BookClub', id: string, name: string, slug: string, description?: string | null, isPrivate: boolean, emoji?: string | null, roleSpec: any, membersCount: number, createdAt: any, creator: { __typename?: 'BookClubMember', id: string, displayName?: string | null, avatarUrl?: string | null }, membership?: { __typename?: 'BookClubMember', role: BookClubMemberRole, avatarUrl?: string | null, isCreator: boolean } | null, currentBook?: (
       { __typename?: 'BookClubBook', id: string, title?: string | null, author?: string | null, imageUrl?: string | null, entity?: { __typename?: 'Media', id: string, thumbnail: { __typename?: 'ImageRef', url: string } } | null }
       & { ' $fragmentRefs'?: { 'BookClubBookItemFragment': BookClubBookItemFragment } }
     ) | null } | null };
@@ -6245,6 +6245,33 @@ export type RemoveBookClubMemberMutationVariables = Exact<{
 
 
 export type RemoveBookClubMemberMutation = { __typename?: 'Mutation', removeBookClubMember: { __typename?: 'BookClubMember', id: string } };
+
+export type ReadingListBookItemFragment = { __typename?: 'BookClubBook', id: string, title?: string | null, author?: string | null, url?: string | null, imageUrl?: string | null, completedAt?: any | null, entity?: { __typename?: 'Media', id: string, resolvedName: string, metadata?: { __typename?: 'MediaMetadata', writers: Array<string> } | null, thumbnail: { __typename?: 'ImageRef', url: string } } | null } & { ' $fragmentName'?: 'ReadingListBookItemFragment' };
+
+export type BookClubReadingListSceneQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type BookClubReadingListSceneQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, books: { __typename?: 'PaginatedBookClubBookResponse', nodes: Array<(
+        { __typename?: 'BookClubBook', id: string, position: number, completedAt?: any | null }
+        & { ' $fragmentRefs'?: { 'ReadingListBookItemFragment': ReadingListBookItemFragment } }
+      )> } } };
+
+export type ReorderBookClubBooksMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  bookIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type ReorderBookClubBooksMutation = { __typename?: 'Mutation', reorderBooks: { __typename?: 'BookClub', id: string } };
+
+export type CompleteBookClubBookMutationVariables = Exact<{
+  bookClubBookId: Scalars['ID']['input'];
+}>;
+
+
+export type CompleteBookClubBookMutation = { __typename?: 'Mutation', completeBook: { __typename?: 'BookClub', id: string } };
 
 export type BookClubSchedulerSceneQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -7972,6 +7999,26 @@ export const BookThumbnailSelectorFragmentDoc = new TypedDocumentString(`
   pages
 }
     `, {"fragmentName":"BookThumbnailSelector"}) as unknown as TypedDocumentString<BookThumbnailSelectorFragment, unknown>;
+export const ReadingListBookItemFragmentDoc = new TypedDocumentString(`
+    fragment ReadingListBookItem on BookClubBook {
+  id
+  title
+  author
+  url
+  imageUrl
+  completedAt
+  entity {
+    id
+    resolvedName
+    metadata {
+      writers
+    }
+    thumbnail {
+      url
+    }
+  }
+}
+    `, {"fragmentName":"ReadingListBookItem"}) as unknown as TypedDocumentString<ReadingListBookItemFragment, unknown>;
 export const ScheduleCardFragmentDoc = new TypedDocumentString(`
     fragment ScheduleCard on BookClubSchedule {
   id
@@ -11746,6 +11793,7 @@ export const BookClubLayoutDocument = new TypedDocumentString(`
     slug
     description
     isPrivate
+    emoji
     roleSpec
     creator {
       id
@@ -11944,6 +11992,52 @@ export const RemoveBookClubMemberDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RemoveBookClubMemberMutation, RemoveBookClubMemberMutationVariables>;
+export const BookClubReadingListSceneDocument = new TypedDocumentString(`
+    query BookClubReadingListScene($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    books(pagination: {none: {unpaginated: true}}) {
+      nodes {
+        id
+        position
+        completedAt
+        ...ReadingListBookItem
+      }
+    }
+  }
+}
+    fragment ReadingListBookItem on BookClubBook {
+  id
+  title
+  author
+  url
+  imageUrl
+  completedAt
+  entity {
+    id
+    resolvedName
+    metadata {
+      writers
+    }
+    thumbnail {
+      url
+    }
+  }
+}`) as unknown as TypedDocumentString<BookClubReadingListSceneQuery, BookClubReadingListSceneQueryVariables>;
+export const ReorderBookClubBooksDocument = new TypedDocumentString(`
+    mutation ReorderBookClubBooks($bookClubId: ID!, $bookIds: [String!]!) {
+  reorderBooks(bookClubId: $bookClubId, bookIds: $bookIds) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<ReorderBookClubBooksMutation, ReorderBookClubBooksMutationVariables>;
+export const CompleteBookClubBookDocument = new TypedDocumentString(`
+    mutation CompleteBookClubBook($bookClubBookId: ID!) {
+  completeBook(bookClubBookId: $bookClubBookId) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<CompleteBookClubBookMutation, CompleteBookClubBookMutationVariables>;
 export const BookClubSchedulerSceneDocument = new TypedDocumentString(`
     query BookClubSchedulerScene($id: ID!) {
   bookClubById(id: $id) {
