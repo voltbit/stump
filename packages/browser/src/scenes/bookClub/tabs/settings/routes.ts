@@ -1,4 +1,4 @@
-import { CalendarCheck, NotebookTabs, PackageX, Tag, Users } from 'lucide-react'
+import { CalendarCheck, ListOrdered, NotebookTabs, PackageX, Tag, Users } from 'lucide-react'
 
 import { RouteGroup } from '@/hooks/useRouteGroups'
 
@@ -34,6 +34,18 @@ export const routeGroups: RouteGroup[] = [
 			},
 		],
 		label: 'Members',
+	},
+	{
+		defaultRoute: 'settings/reading-list',
+		items: [
+			{
+				icon: ListOrdered,
+				label: 'Reading list',
+				localeKey: 'reading-list',
+				// permission: 'bookclub:manage',
+				to: 'settings/reading-list',
+			},
+		],
 	},
 	{
 		defaultRoute: 'settings/scheduler',

@@ -8,6 +8,7 @@ import { BookClubManagementContext } from './context'
 const BasicSettingsScene = lazy(() => import('./basics'))
 const MemberManagementScene = lazy(() => import('./members'))
 const RoleManagementScene = lazy(() => import('./roles'))
+const ReadingListScene = lazy(() => import('./readingList'))
 const DeletionScene = lazy(() => import('./danger'))
 const BookClubSchedulerScene = lazy(() => import('./scheduler'))
 
@@ -22,6 +23,7 @@ export default function BookClubSettingsRouter() {
 					<Route path="basics" element={<BasicSettingsScene />} />
 					<Route path="members" element={<MemberManagementScene />} />
 					<Route path="roles" element={<RoleManagementScene />} />
+					<Route path="reading-list" element={<ReadingListScene />} />
 					<Route path="scheduler" element={<BookClubSchedulerScene />} />
 					<Route path="delete" element={<DeletionScene />} />
 				</Routes>

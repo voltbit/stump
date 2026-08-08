@@ -211,6 +211,7 @@
 				"roles": "Roles",
 				"label": "Membership"
 			},
+			"reading-list": "Reading list",
 			"scheduling": {
 				"scheduler": "Scheduler",
 				"options": "Options",
@@ -242,6 +243,10 @@
 					"description": "The current role mappings for this book club"
 				}
 			}
+		},
+		"reading-list": {
+			"title": "Reading List",
+			"description": "Manage the ordered queue of books this club is reading"
 		},
 		"scheduling/scheduler": {
 			"title": "Scheduler",
