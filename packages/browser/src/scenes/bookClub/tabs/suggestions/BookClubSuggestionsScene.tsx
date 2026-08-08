@@ -123,12 +123,13 @@ export default function BookClubSuggestionsScene() {
 						<SuggestionCard
 							key={suggestion.id}
 							data={suggestion}
-							canManage={viewerCanManage}
 							canLike={viewerIsMember}
 							isLikePending={likingId === suggestion.id}
 							onToggleLike={() => handleToggleLike(suggestion.id)}
-							onResolve={() =>
-								setResolving({ id: suggestion.id, label: suggestionLabel(suggestion) })
+							onResolve={
+								viewerCanManage
+									? () => setResolving({ id: suggestion.id, label: suggestionLabel(suggestion) })
+									: undefined
 							}
 						/>
 					))}
@@ -142,11 +143,9 @@ export default function BookClubSuggestionsScene() {
 						<SuggestionCard
 							key={suggestion.id}
 							data={suggestion}
-							canManage={viewerCanManage}
 							canLike={viewerIsMember}
 							isLikePending={likingId === suggestion.id}
 							onToggleLike={() => handleToggleLike(suggestion.id)}
-							onResolve={() => {}}
 						/>
 					))}
 				</div>

@@ -31,17 +31,16 @@ const STATUS_BADGE_VARIANT: Record<BookClubSuggestionStatus, 'warning' | 'succes
 
 type Props = {
 	data: FragmentType<typeof suggestionCardFragment>
-	canManage: boolean
 	/** Only members can like/unlike (server-enforced) - non-members see a read-only count */
 	canLike: boolean
 	isLikePending: boolean
 	onToggleLike: () => void
-	onResolve: () => void
+	/** Only present for pending suggestions an admin/creator can act on */
+	onResolve?: () => void
 }
 
 export default function SuggestionCard({
 	data,
-	canManage,
 	canLike,
 	isLikePending,
 	onToggleLike,
@@ -108,7 +107,7 @@ export default function SuggestionCard({
 						{suggestion.likeCount}
 					</Button>
 
-					{canManage && suggestion.status === BookClubSuggestionStatus.Pending && (
+					{onResolve && (
 						<Button variant="secondary" size="sm" onClick={onResolve}>
 							Resolve
 						</Button>
