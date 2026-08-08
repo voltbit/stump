@@ -3,7 +3,7 @@ use models::{
 	entity::{book_club_member, book_club_member_favorite_book},
 	shared::book_club::BookClubMemberRole,
 };
-use sea_orm::{prelude::*, IntoActiveModel, Set};
+use sea_orm::{prelude::*, sea_query::OnConflict, IntoActiveModel, Set};
 
 use crate::{
 	data::{AuthContext, CoreContext},
@@ -129,20 +129,7 @@ impl BookClubMemberMutation {
 				.await?
 				.ok_or("You are not a member of this club or it does not exist")?;
 
-		let existing_favorite =
-			book_club_member_favorite_book::Entity::find_by_member_id(&member.id)
-				.one(conn)
-				.await?;
-
-		let saved_favorite = match existing_favorite {
-			Some(existing) => {
-				input
-					.apply(existing.into_active_model())
-					.update(conn)
-					.await?
-			},
-			None => input.into_active_model(&member.id).insert(conn).await?,
-		};
+		let saved_favorite = upsert_favorite_book(&member.id, input, conn).await?;
 
 		Ok(BookClubMemberFavoriteBook::from(saved_favorite))
 	}
@@ -199,6 +186,37 @@ impl BookClubMemberMutation {
 	}
 }
 
+/// Sets or replaces a member's favorite book as a single atomic upsert on the unique
+/// `member_id` column, rather than a select-then-branch into insert/update: two
+/// concurrent calls racing a select-based existence check could both observe "no
+/// existing favorite" and both attempt an insert, tripping the unique constraint
+/// instead of the intended "set or replace" behavior.
+async fn upsert_favorite_book(
+	member_id: &str,
+	input: SetBookClubMemberFavoriteBookInput,
+	conn: &DatabaseConnection,
+) -> Result<book_club_member_favorite_book::Model> {
+	Ok(
+		book_club_member_favorite_book::Entity::insert(
+			input.into_active_model(member_id),
+		)
+		.on_conflict(
+			OnConflict::column(book_club_member_favorite_book::Column::MemberId)
+				.update_columns([
+					book_club_member_favorite_book::Column::BookId,
+					book_club_member_favorite_book::Column::Title,
+					book_club_member_favorite_book::Column::Author,
+					book_club_member_favorite_book::Column::Url,
+					book_club_member_favorite_book::Column::ImageUrl,
+					book_club_member_favorite_book::Column::Notes,
+				])
+				.to_owned(),
+		)
+		.exec_with_returning(conn)
+		.await?,
+	)
+}
+
 /// Enforces the role-change permission matrix for [BookClubMemberMutation::update_book_club_member_role]:
 /// - A member can never change their own role
 /// - Nobody can change the Creator's role, or promote another member to Creator
@@ -238,6 +256,48 @@ fn validate_role_change(
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use sea_orm::{MockDatabase, MockExecResult};
+
+	#[tokio::test]
+	async fn upsert_favorite_book_performs_single_upsert_statement() {
+		let saved = book_club_member_favorite_book::Model {
+			id: "fav-1".to_string(),
+			title: Some("Title".to_string()),
+			author: Some("Author".to_string()),
+			url: None,
+			notes: None,
+			member_id: "member-1".to_string(),
+			book_id: None,
+			image_url: None,
+		};
+
+		// Exactly one query-result set (for the returning select) and one exec-result
+		// (for the insert/upsert statement) are provided. If this were still doing a
+		// select-then-branch, the earlier existence check would consume the query
+		// result meant for `exec_with_returning`, and this test would fail with an
+		// "out of MockExecResults" or type-mismatch panic instead of asserting below.
+		let conn = MockDatabase::new(sea_orm::DatabaseBackend::Sqlite)
+			.append_query_results(vec![vec![saved.clone()]])
+			.append_exec_results(vec![MockExecResult {
+				last_insert_id: 1,
+				rows_affected: 1,
+			}])
+			.into_connection();
+
+		let input = SetBookClubMemberFavoriteBookInput {
+			book_id: None,
+			title: Some("Title".to_string()),
+			author: Some("Author".to_string()),
+			url: None,
+			image_url: None,
+			notes: None,
+		};
+
+		let result = upsert_favorite_book("member-1", input, &conn)
+			.await
+			.unwrap();
+		assert_eq!(result, saved);
+	}
 
 	fn get_member(id: &str, role: BookClubMemberRole) -> book_club_member::Model {
 		book_club_member::Model {

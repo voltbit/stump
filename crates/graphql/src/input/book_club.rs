@@ -292,22 +292,6 @@ impl SetBookClubMemberFavoriteBookInput {
 			notes: Set(self.notes),
 		}
 	}
-
-	/// Replaces every field on an existing favorite book row, since "set or replace"
-	/// semantics mean the whole record reflects whatever was last submitted
-	pub fn apply(
-		self,
-		mut active_model: book_club_member_favorite_book::ActiveModel,
-	) -> book_club_member_favorite_book::ActiveModel {
-		active_model.book_id = Set(self.book_id);
-		active_model.title = Set(self.title);
-		active_model.author = Set(self.author);
-		active_model.url = Set(self.url);
-		active_model.image_url = Set(self.image_url);
-		active_model.notes = Set(self.notes);
-
-		active_model
-	}
 }
 
 #[derive(Debug, InputObject)]
@@ -674,34 +658,5 @@ mod tests {
 		assert_eq!(active_model.book_id, Set(Some("media-1".to_string())));
 		assert_eq!(active_model.title, Set(Some("Title".to_string())));
 		assert!(Uuid::parse_str(&active_model.id.unwrap()).is_ok());
-	}
-
-	#[test]
-	fn favorite_book_input_apply_replaces_existing_fields() {
-		let existing = book_club_member_favorite_book::Model {
-			id: "fav-1".to_string(),
-			title: Some("Old title".to_string()),
-			author: Some("Old author".to_string()),
-			url: Some("https://old.example.com".to_string()),
-			notes: Some("Old notes".to_string()),
-			member_id: "member-1".to_string(),
-			book_id: None,
-			image_url: None,
-		};
-
-		let input = SetBookClubMemberFavoriteBookInput {
-			book_id: Some("media-1".to_string()),
-			title: Some("New title".to_string()),
-			author: None,
-			url: None,
-			image_url: None,
-			notes: None,
-		};
-
-		let active_model = input.apply(existing.into_active_model());
-		assert_eq!(active_model.book_id, Set(Some("media-1".to_string())));
-		assert_eq!(active_model.title, Set(Some("New title".to_string())));
-		assert_eq!(active_model.author, Set(None));
-		assert_eq!(active_model.url, Set(None));
 	}
 }
