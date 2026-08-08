@@ -1,5 +1,5 @@
 import { useGraphQLMutation } from '@stump/client'
-import { Button, Dialog, Text, TextArea } from '@stump/components'
+import { Button, CheckBox, Dialog, Text, TextArea } from '@stump/components'
 import { BookClubSuggestionStatus, extractErrorMessage, graphql } from '@stump/graphql'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -42,14 +42,17 @@ type Props = {
 }
 
 /**
- * The admin/creator resolve flow for a pending suggestion: accept (which appends the book to
- * the end of the reading list via the server's `promote` transaction) or reject, with an
- * optional note explaining the call either way.
+ * The admin/creator resolve flow for a pending suggestion: accept or reject, with an optional
+ * note explaining the call either way.
  *
- * Accepting always promotes - the server only lets `promote` accompany `ACCEPTED` (rejecting a
- * suggestion while also adding its book to the queue makes no sense), and there's no use case
- * yet for accepting-without-queueing, so a single "Accept & add to reading list" action covers
- * it rather than exposing a separate checkbox for a state nothing needs.
+ * `promote` is an independent flag, not implied by acceptance - the server only rejects `promote:
+ * true` paired with a non-`ACCEPTED` status (`validate_promotion`), but `(ACCEPTED, promote:
+ * false)` is an explicitly valid, tested combination (see
+ * `validate_promotion_allows_non_promoting_updates_of_any_status` in
+ * `crates/graphql/src/mutation/book_club_suggestion.rs`) - e.g. an admin accepting several
+ * suggestions before ordering the reading list manually, without each acceptance immediately
+ * appending to the end of the queue. The checkbox below surfaces that choice and only applies to
+ * Accept; Reject always sends `promote: false` regardless of its state.
  */
 export default function ResolveSuggestionDialog({
 	isOpen,
@@ -58,10 +61,12 @@ export default function ResolveSuggestionDialog({
 	onResolved,
 }: Props) {
 	const [notes, setNotes] = useState('')
+	const [promote, setPromote] = useState(true)
 
 	useEffect(() => {
 		if (isOpen) {
 			setNotes('')
+			setPromote(true)
 		}
 	}, [isOpen])
 
@@ -84,7 +89,7 @@ export default function ResolveSuggestionDialog({
 			suggestionId: suggestion.id,
 			status: BookClubSuggestionStatus.Accepted,
 			notes: notes.trim() || undefined,
-			promote: true,
+			promote,
 		})
 	}
 
@@ -116,6 +121,13 @@ export default function ResolveSuggestionDialog({
 						value={notes}
 						onChange={(event) => setNotes(event.target.value)}
 					/>
+
+					<CheckBox
+						label="Add to the reading list"
+						description="Only applies if you accept - appends the book to the end of the queue"
+						checked={promote}
+						onClick={() => setPromote((prev) => !prev)}
+					/>
 				</div>
 
 				<Dialog.Footer>
@@ -126,7 +138,7 @@ export default function ResolveSuggestionDialog({
 						Reject
 					</Button>
 					<Button onClick={handleAccept} disabled={isPending}>
-						Accept &amp; add to reading list
+						Accept
 					</Button>
 				</Dialog.Footer>
 			</Dialog.Content>
