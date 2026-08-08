@@ -2,8 +2,6 @@ import { UserPermission } from '@stump/graphql'
 import { lazy, useEffect } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router'
 
-import { UnderConstruction } from '@/components/unimplemented'
-
 import { useAppContext } from '../../context'
 import BookClubHomeLayout from './BookClubLayout.tsx'
 import BookClubSettingsRouter from './tabs/settings'
@@ -16,8 +14,6 @@ const BookClubExplorerScene = lazy(() => import('./explore/BookClubExploreScene.
 const BookClubHomeScene = lazy(() => import('./tabs/home'))
 const BookClubSuggestionsScene = lazy(() => import('./tabs/suggestions'))
 const BookClubMembersScene = lazy(() => import('./tabs/members'))
-
-const IS_DEVELOPMENT = import.meta.env.DEV
 
 export default function BookClubRouter() {
 	const { checkPermission } = useAppContext()
@@ -32,14 +28,6 @@ export default function BookClubRouter() {
 
 	if (!canAccess) {
 		return null
-	}
-
-	if (!IS_DEVELOPMENT) {
-		return (
-			<Routes>
-				<Route path="*" element={<UnderConstruction issue={120} />} />
-			</Routes>
-		)
 	}
 
 	return (
