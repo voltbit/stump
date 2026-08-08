@@ -90,6 +90,11 @@ export default function Screen() {
 					name: name.trim(),
 					description: description.trim() || null,
 					isPrivate,
+					// The server applies `description`/`emoji` unconditionally (unlike `name`/
+					// `isPrivate`, which fall back to the existing value when omitted), so we must
+					// pass the current emoji through here even though this screen doesn't edit it -
+					// otherwise every save would silently clear it.
+					emoji: club.emoji ?? null,
 				},
 			})
 			queryClient.invalidateQueries({ queryKey: ['bookClubById', clubId] })
@@ -100,7 +105,7 @@ export default function Screen() {
 				description: error instanceof Error ? error.message : 'An unknown error occurred',
 			})
 		}
-	}, [canSubmit, updateClub, clubId, name, description, isPrivate, queryClient, router])
+	}, [canSubmit, updateClub, clubId, name, description, isPrivate, club.emoji, queryClient, router])
 
 	const navigation = useNavigation()
 	useLayoutEffect(() => {
