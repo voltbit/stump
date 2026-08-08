@@ -19,7 +19,7 @@ const query = graphql(`
 			name
 			slug
 			emoji
-			members {
+			membership {
 				id
 				userId
 				role
@@ -37,7 +37,7 @@ export default function BookClubSideBarSection({
 	isMobile,
 }: Props) {
 	const location = useLocation()
-	const { user, isServerOwner, checkPermission } = useAppContext()
+	const { isServerOwner, checkPermission } = useAppContext()
 
 	const { t } = useLocaleContext()
 	const { sdk } = useSDK()
@@ -57,8 +57,7 @@ export default function BookClubSideBarSection({
 		}
 
 		return bookClubs.map((bookClub) => {
-			const userId = user.id
-			const member = bookClub.members?.find((member) => member.userId === userId)
+			const member = bookClub.membership
 			const canChange =
 				(isServerOwner || member?.role === 'CREATOR' || member?.role === 'ADMIN') && !isMobile
 

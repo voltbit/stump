@@ -17,9 +17,11 @@ const fragment = graphql(`
 		description
 		membersCount
 		members {
-			id
-			displayName
-			avatarUrl
+			nodes {
+				id
+				displayName
+				avatarUrl
+			}
 		}
 		currentBook {
 			id
@@ -67,7 +69,7 @@ export function BookClubCard({ club }: Props) {
 		}),
 	})
 
-	const avatars = data.members.slice(0, 3).map((member) => ({
+	const avatars = data.members.nodes.slice(0, 3).map((member) => ({
 		src: member.avatarUrl,
 		fallback: member.displayName?.charAt(0).toUpperCase() || '?',
 	}))
@@ -80,7 +82,7 @@ export function BookClubCard({ club }: Props) {
 			className="w-full"
 		>
 			<Card>
-				<Card.Row className="flex-row items-start gap-3">
+				<Card.Row className="gap-3 flex-row items-start">
 					<ThumbnailImage
 						key={imageProps?.url}
 						source={{
@@ -95,7 +97,7 @@ export function BookClubCard({ club }: Props) {
 						originalDimensions={imageProps?.originalDimensions}
 					/>
 
-					<View className="flex-1 justify-between gap-4">
+					<View className="gap-4 flex-1 justify-between">
 						<View className="gap-1">
 							<Heading className="font-medium">{data.name}</Heading>
 							{data.description && (
@@ -105,7 +107,7 @@ export function BookClubCard({ club }: Props) {
 							)}
 						</View>
 
-						<View className="flex-row items-center gap-2">
+						<View className="gap-2 flex-row items-center">
 							<AvatarStack
 								avatars={avatars}
 								overflowCount={overflowCount}

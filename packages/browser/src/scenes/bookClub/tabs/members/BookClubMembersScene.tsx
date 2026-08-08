@@ -10,11 +10,13 @@ const query = graphql(`
 		bookClubById(id: $id) {
 			id
 			members {
-				id
-				avatarUrl
-				displayName
-				isCreator
-				role
+				nodes {
+					id
+					avatarUrl
+					displayName
+					isCreator
+					role
+				}
 			}
 		}
 	}
@@ -31,7 +33,9 @@ export default function BookClubMembersScene() {
 
 	const {
 		data: {
-			bookClubById: { members },
+			bookClubById: {
+				members: { nodes: members },
+			},
 		},
 	} = useSuspenseGraphQL(query, sdk.cacheKey('bookClubById', [id, 'membersList']), { id })
 

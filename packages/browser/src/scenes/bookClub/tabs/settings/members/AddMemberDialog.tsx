@@ -28,6 +28,19 @@ const usersQuery = graphql(`
 	}
 `)
 
+const membersQuery = graphql(`
+	query AddBookClubMemberExistingMembers($id: ID!) {
+		bookClubById(id: $id) {
+			id
+			members(pagination: { none: { unpaginated: true } }) {
+				nodes {
+					userId
+				}
+			}
+		}
+	}
+`)
+
 const mutation = graphql(`
 	mutation CreateBookClubMember($bookClubId: ID!, $input: CreateBookClubMemberInput!) {
 		createBookClubMember(bookClubId: $bookClubId, input: $input) {
@@ -40,28 +53,32 @@ type Props = {
 	isOpen: boolean
 	bookClubId: string
 	roleSpec: BookClubMemberRoleSpec
-	/** Userids that are already members of the club, and should be excluded from the picker */
-	excludedUserIds: string[]
 	onClose: () => void
 	onAdded: () => void
 }
 
-export default function AddMemberDialog({
-	isOpen,
-	bookClubId,
-	roleSpec,
-	excludedUserIds,
-	onClose,
-	onAdded,
-}: Props) {
+export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose, onAdded }: Props) {
 	const { sdk } = useSDK()
 
-	// Only fetch the candidate user list while the dialog is actually open
+	// Only fetch the candidate user list, and the club's current membership (to exclude
+	// existing members from the picker), while the dialog is actually open
 	const { data: usersData, error: usersError } = useGraphQL(
 		usersQuery,
 		sdk.cacheKey('users', ['unpaginated']),
 		undefined,
 		{ enabled: isOpen },
+	)
+
+	const { data: membersData } = useGraphQL(
+		membersQuery,
+		sdk.cacheKey('bookClubById', [bookClubId, 'members', 'unpaginated']),
+		{ id: bookClubId },
+		{ enabled: isOpen },
+	)
+
+	const excludedUserIds = useMemo(
+		() => membersData?.bookClubById.members.nodes.map(({ userId }) => userId) ?? [],
+		[membersData],
 	)
 
 	const usersErrorMessage = usersError

@@ -1,7 +1,8 @@
-import { useGraphQLMutation, useSDK, useSuspenseGraphQL } from '@stump/client'
+import { useGraphQL, useGraphQLMutation, useSDK } from '@stump/client'
 import { Avatar, Button, Card, ToolTip } from '@stump/components'
 import { BookClubMembersTableQuery, graphql, UserPermission } from '@stump/graphql'
 import { BookClubMemberRoleSpec } from '@stump/sdk'
+import { keepPreviousData } from '@tanstack/react-query'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import upperFirst from 'lodash/upperFirst'
 import { UserPlus } from 'lucide-react'
@@ -17,16 +18,28 @@ import MemberActionMenu from './MemberActionMenu'
 import RemoveMemberConfirmation from './RemoveMemberConfirmation'
 
 const query = graphql(`
-	query BookClubMembersTable($id: ID!) {
+	query BookClubMembersTable($id: ID!, $pagination: Pagination!) {
 		bookClubById(id: $id) {
 			id
-			members {
-				id
-				avatarUrl
-				isCreator
-				displayName
-				role
-				userId
+			members(pagination: $pagination) {
+				nodes {
+					id
+					avatarUrl
+					isCreator
+					displayName
+					role
+					userId
+				}
+				pageInfo {
+					__typename
+					... on OffsetPaginationInfo {
+						totalPages
+						currentPage
+						pageSize
+						pageOffset
+						zeroBased
+					}
+				}
 			}
 		}
 	}
@@ -48,19 +61,29 @@ export default function MembersTable() {
 		club: { id, roleSpec },
 	} = useBookClubManagement()
 
-	// TODO: implement backend pagination for better scalability
-	const {
-		data: {
-			bookClubById: { members },
-		},
-		refetch,
-	} = useSuspenseGraphQL(query, sdk.cacheKey('bookClubById', [id, 'members']), { id })
-
 	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
-	const pageCount = useMemo(
-		() => Math.ceil((members?.length ?? 0) / pagination.pageSize),
-		[members, pagination.pageSize],
+
+	const { data, refetch } = useGraphQL(
+		query,
+		sdk.cacheKey('bookClubById', [id, 'members', pagination]),
+		{
+			id,
+			pagination: {
+				offset: {
+					page: pagination.pageIndex + 1, // Offset pagination is 1-based
+					pageSize: pagination.pageSize,
+				},
+			},
+		},
+		{ placeholderData: keepPreviousData },
 	)
+
+	const members = data?.bookClubById.members.nodes ?? []
+	const pageInfo = data?.bookClubById.members.pageInfo
+
+	if (!!pageInfo && pageInfo.__typename !== 'OffsetPaginationInfo') {
+		throw new Error('Invalid pagination type, expected OffsetPaginationInfo')
+	}
 
 	const [removingMember, setRemovingMember] = useState<Member | null>(null)
 	const [isAddingMember, setIsAddingMember] = useState(false)
@@ -108,7 +131,6 @@ export default function MembersTable() {
 				isOpen={isAddingMember}
 				bookClubId={id}
 				roleSpec={roleSpec}
-				excludedUserIds={members?.map(({ userId }) => userId) ?? []}
 				onClose={() => setIsAddingMember(false)}
 				onAdded={() => {
 					setIsAddingMember(false)
@@ -139,7 +161,7 @@ export default function MembersTable() {
 					options={{
 						manualPagination: true,
 						onPaginationChange: setPagination,
-						pageCount,
+						pageCount: pageInfo?.totalPages,
 						state: {
 							columnPinning: {
 								right: ['actions'],
@@ -147,7 +169,7 @@ export default function MembersTable() {
 							pagination,
 						},
 					}}
-					data={members ?? []}
+					data={members}
 					fullWidth
 					cellClassName="bg-background"
 				/>
@@ -156,7 +178,7 @@ export default function MembersTable() {
 	)
 }
 
-type Member = BookClubMembersTableQuery['bookClubById']['members'][number]
+type Member = BookClubMembersTableQuery['bookClubById']['members']['nodes'][number]
 
 const columnHelper = createColumnHelper<Member>()
 

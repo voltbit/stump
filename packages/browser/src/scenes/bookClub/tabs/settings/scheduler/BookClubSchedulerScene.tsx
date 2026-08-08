@@ -21,15 +21,17 @@ const query = graphql(`
 				id
 				...ScheduleCard
 			}
-			books {
-				id
-				title
-				author
-				url
-				bookEntityId
-				entity {
+			books(pagination: { none: { unpaginated: true } }) {
+				nodes {
 					id
-					resolvedName
+					title
+					author
+					url
+					bookEntityId
+					entity {
+						id
+						resolvedName
+					}
 				}
 			}
 		}
@@ -63,7 +65,7 @@ export default function BookClubSchedulerScene() {
 
 	const clubBooks = useMemo<ClubBookOption[]>(
 		() =>
-			books.map((book) => ({
+			books.nodes.map((book) => ({
 				id: book.id,
 				label: book.entity?.resolvedName ?? book.title ?? 'Untitled',
 				bookEntityId: book.bookEntityId,
