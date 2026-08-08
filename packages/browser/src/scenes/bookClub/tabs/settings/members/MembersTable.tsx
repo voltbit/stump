@@ -26,7 +26,7 @@ const query = graphql(`
 					id
 					avatarUrl
 					isCreator
-					displayName
+					username
 					role
 					userId
 				}
@@ -184,19 +184,19 @@ const columnHelper = createColumnHelper<Member>()
 
 const createBaseColumns = (spec: BookClubMemberRoleSpec) =>
 	[
-		columnHelper.accessor(({ displayName }) => displayName, {
+		columnHelper.accessor(({ username }) => username, {
 			cell: ({
 				row: {
-					original: { avatarUrl, displayName },
+					original: { avatarUrl, username },
 				},
 			}) => (
 				<div className="flex items-center">
-					<Avatar className="mr-2" src={avatarUrl ?? undefined} fallback={displayName} />
-					<span>{displayName}</span>
+					<Avatar className="mr-2" src={avatarUrl ?? undefined} fallback={username} />
+					<span>{username}</span>
 				</div>
 			),
 			header: 'Member',
-			id: 'display_name',
+			id: 'username',
 		}),
 		columnHelper.accessor('role', {
 			cell: ({ getValue }) => (

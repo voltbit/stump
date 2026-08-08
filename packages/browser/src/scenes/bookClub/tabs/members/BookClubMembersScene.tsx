@@ -13,7 +13,7 @@ const query = graphql(`
 				nodes {
 					id
 					avatarUrl
-					displayName
+					username
 					isCreator
 					role
 				}
@@ -65,11 +65,11 @@ export default function BookClubMembersScene() {
 	return (
 		<div className="gap-3 flex flex-col">
 			<Card className="divide-y divide-border">
-				{members.map(({ id: memberId, avatarUrl, displayName, isCreator, role }) => (
+				{members.map(({ id: memberId, avatarUrl, username, isCreator, role }) => (
 					<div key={memberId} className="gap-3 p-3 flex items-center">
-						<Avatar src={avatarUrl ?? undefined} fallback={displayName} />
+						<Avatar src={avatarUrl ?? undefined} fallback={username} />
 						<div className="min-w-0 flex flex-col">
-							<Text className="truncate">{displayName}</Text>
+							<Text className="truncate">{username}</Text>
 							<Text size="sm" variant="muted">
 								{isCreator ? 'Creator' : roleSpec[role] || upperFirst(role.toLowerCase())}
 							</Text>

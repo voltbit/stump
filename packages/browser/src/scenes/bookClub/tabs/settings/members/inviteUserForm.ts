@@ -20,8 +20,11 @@ export const emptyInviteUserFormValues: InviteUserFormValues = {
 
 /**
  * Builds the `BookClubInvitationInput` payload from validated form values. Unlike a direct
- * member addition, an invitation carries no display name - the invitee picks that for
- * themselves when they accept.
+ * member addition, an invitation carries no display name: accepting never collects one either
+ * (see `MyBookClubInvitations.tsx`), so the resulting member's `display_name` is left `None`.
+ * That's fine because `BookClubMember.username` (which every renderer should select instead of
+ * the raw, possibly-null `displayName`) falls back to the invited user's account username on
+ * the server when no display name was ever set.
  */
 export const buildCreateInvitationInput = (values: InviteUserFormValues) => ({
 	role: values.role,
