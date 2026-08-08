@@ -6217,7 +6217,7 @@ export type BookClubMembersListQueryVariables = Exact<{
 }>;
 
 
-export type BookClubMembersListQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, displayName?: string | null, isCreator: boolean, role: BookClubMemberRole }>, pageInfo: { __typename: 'CursorPaginationInfo', currentCursor?: string | null, nextCursor?: string | null, limit: number } | { __typename: 'OffsetPaginationInfo' } } } };
+export type BookClubMembersListQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, username: string, isCreator: boolean, role: BookClubMemberRole }>, pageInfo: { __typename: 'CursorPaginationInfo', currentCursor?: string | null, nextCursor?: string | null, limit: number } | { __typename: 'OffsetPaginationInfo' } } } };
 
 export type BookClubBasicSettingsSceneQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6270,7 +6270,7 @@ export type BookClubMembersTableQueryVariables = Exact<{
 }>;
 
 
-export type BookClubMembersTableQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, isCreator: boolean, displayName?: string | null, role: BookClubMemberRole, userId: string }>, pageInfo: { __typename: 'CursorPaginationInfo' } | { __typename: 'OffsetPaginationInfo', totalPages: number, currentPage: number, pageSize: number, pageOffset: number, zeroBased: boolean } } } };
+export type BookClubMembersTableQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', id: string, avatarUrl?: string | null, isCreator: boolean, username: string, role: BookClubMemberRole, userId: string }>, pageInfo: { __typename: 'CursorPaginationInfo' } | { __typename: 'OffsetPaginationInfo', totalPages: number, currentPage: number, pageSize: number, pageOffset: number, zeroBased: boolean } } } };
 
 export type RemoveBookClubMemberMutationVariables = Exact<{
   bookClubId: Scalars['ID']['input'];
@@ -11968,7 +11968,7 @@ export const BookClubMembersListDocument = new TypedDocumentString(`
       nodes {
         id
         avatarUrl
-        displayName
+        username
         isCreator
         role
       }
@@ -12063,7 +12063,7 @@ export const BookClubMembersTableDocument = new TypedDocumentString(`
         id
         avatarUrl
         isCreator
-        displayName
+        username
         role
         userId
       }
