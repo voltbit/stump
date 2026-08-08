@@ -1929,8 +1929,13 @@ type Mutation {
 	removeSuggestion(suggestionId: ID!): BookClubBookSuggestion!
 	"Toggle like on a suggestion"
 	toggleSuggestionLike(suggestionId: ID!): Boolean!
-	"Update the status of a suggestion (Admin+)"
-	updateSuggestionStatus(suggestionId: ID!, status: BookClubSuggestionStatus!, notes: String): BookClubBookSuggestion!
+	"""
+	Update the status of a suggestion (Admin+). Pass `promote: true` alongside
+	`status: ACCEPTED` to also add the suggested book to the end of the club's
+	reading list in the same transaction - entity-backed if the suggestion
+	referenced a stored book, free-form (title/author/url) otherwise.
+	"""
+	updateSuggestionStatus(suggestionId: ID!, status: BookClubSuggestionStatus!, notes: String, promote: Boolean! = false): BookClubBookSuggestion!
 	"Create a new schedule for the book club (Admin+)"
 	createBookClubSchedule(bookClubId: ID!, input: CreateBookClubScheduleInput!): BookClubSchedule!
 	"Update an existing schedule for the book club (Admin+)"

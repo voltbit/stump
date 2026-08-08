@@ -2305,7 +2305,12 @@ export type Mutation = {
   updateSeriesThumbnail: Series;
   updateSmartList: SmartList;
   updateSmartListView: SmartListView;
-  /** Update the status of a suggestion (Admin+) */
+  /**
+   * Update the status of a suggestion (Admin+). Pass `promote: true` alongside
+   * `status: ACCEPTED` to also add the suggested book to the end of the club's
+   * reading list in the same transaction - entity-backed if the suggestion
+   * referenced a stored book, free-form (title/author/url) otherwise.
+   */
   updateSuggestionStatus: BookClubBookSuggestion;
   updateUser: User;
   updateUserLockStatus: User;
@@ -3058,6 +3063,7 @@ export type MutationUpdateSmartListViewArgs = {
 
 export type MutationUpdateSuggestionStatusArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
+  promote?: Scalars['Boolean']['input'];
   status: BookClubSuggestionStatus;
   suggestionId: Scalars['ID']['input'];
 };
