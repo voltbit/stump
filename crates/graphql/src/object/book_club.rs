@@ -4,7 +4,11 @@ use crate::object::book_club_book::BookClubBook;
 use crate::object::book_club_discussion::BookClubDiscussion;
 use crate::object::book_club_invitation::BookClubInvitation;
 use crate::object::book_club_schedule::BookClubSchedule;
+use crate::pagination::{
+	get_paginated_results, PaginatedResponse, Pagination, PaginationValidator,
+};
 use async_graphql::{ComplexObject, Context, Json, Result, SimpleObject};
+use models::entity::user::AuthUser;
 use models::entity::{
 	book_club, book_club_book, book_club_discussion, book_club_invitation,
 	book_club_member, book_club_schedule,
@@ -89,16 +93,15 @@ impl BookClub {
 		Ok(books.into_iter().map(BookClubBook::from).collect())
 	}
 
-	// TODO: Pagination
 	/// All books in the club's queue, ordered by position
-	async fn books(&self, ctx: &Context<'_>) -> Result<Vec<BookClubBook>> {
+	async fn books(
+		&self,
+		ctx: &Context<'_>,
+		#[graphql(default, validator(custom = "PaginationValidator"))]
+		pagination: Pagination,
+	) -> Result<PaginatedResponse<BookClubBook>> {
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
-
-		let books = book_club_book::Entity::find_for_book_club_id(&self.model.id)
-			.all(conn)
-			.await?;
-
-		Ok(books.into_iter().map(BookClubBook::from).collect())
+		get_paginated_books_for_club(&self.model.id, conn, pagination).await
 	}
 
 	/// All schedules configured for this book club
@@ -134,22 +137,15 @@ impl BookClub {
 			.collect())
 	}
 
-	async fn members(&self, ctx: &Context<'_>) -> Result<Vec<BookClubMember>> {
+	async fn members(
+		&self,
+		ctx: &Context<'_>,
+		#[graphql(default, validator(custom = "PaginationValidator"))]
+		pagination: Pagination,
+	) -> Result<PaginatedResponse<BookClubMember>> {
 		let AuthContext { user, .. } = ctx.data::<AuthContext>()?;
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
-		let book_club_members =
-			book_club_member::Entity::find_members_accessible_to_user_for_book_club_id(
-				user,
-				&self.model.id.clone(),
-			)
-			.into_model::<book_club_member::Model>()
-			.all(conn)
-			.await?;
-
-		Ok(book_club_members
-			.into_iter()
-			.map(BookClubMember::from)
-			.collect())
+		get_paginated_members_for_club(user, &self.model.id, conn, pagination).await
 	}
 
 	async fn moderators(&self, ctx: &Context<'_>) -> Result<Vec<BookClubMember>> {
@@ -271,5 +267,228 @@ impl BookClub {
 			.await?;
 
 		Ok(count)
+	}
+}
+
+/// Fetches a page of the books in a club's queue, ordered by position. The `position`
+/// column is used as the cursor column (rather than `id`) so that cursor pagination
+/// stays consistent with the queue order even after `reorderBooks` reassigns positions.
+async fn get_paginated_books_for_club(
+	book_club_id: &str,
+	conn: &DatabaseConnection,
+	pagination: Pagination,
+) -> Result<PaginatedResponse<BookClubBook>> {
+	let query = book_club_book::Entity::find_for_book_club_id(book_club_id);
+
+	get_paginated_results(
+		query,
+		book_club_book::Column::Position,
+		conn,
+		pagination,
+		|model: &book_club_book::Model| model.position.to_string(),
+	)
+	.await
+}
+
+/// Fetches a page of the members accessible to the requesting user for a club, ordered
+/// by `id` for stable pagination.
+async fn get_paginated_members_for_club(
+	user: &AuthUser,
+	book_club_id: &str,
+	conn: &DatabaseConnection,
+	pagination: Pagination,
+) -> Result<PaginatedResponse<BookClubMember>> {
+	let query =
+		book_club_member::Entity::find_members_accessible_to_user_for_book_club_id(
+			user,
+			book_club_id,
+		)
+		.order_by_asc(book_club_member::Column::Id);
+
+	get_paginated_results(
+		query,
+		book_club_member::Column::Id,
+		conn,
+		pagination,
+		|model: &book_club_member::Model| model.id.clone(),
+	)
+	.await
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::pagination::{CursorPagination, OffsetPagination, PaginationInfo};
+	use crate::tests::common::get_default_user;
+	use sea_orm::{DatabaseBackend::Sqlite, MockDatabase, Value};
+
+	fn get_test_book(id: &str, position: i32) -> book_club_book::Model {
+		book_club_book::Model {
+			id: id.to_string(),
+			position,
+			completed_at: None,
+			title: Some("Test Book".to_string()),
+			author: Some("Test Author".to_string()),
+			url: None,
+			image_url: None,
+			book_entity_id: None,
+			book_club_id: "club-1".to_string(),
+			added_at: chrono::Utc::now().into(),
+		}
+	}
+
+	fn get_test_member(id: &str) -> book_club_member::Model {
+		book_club_member::Model {
+			id: id.to_string(),
+			display_name: Some("Tester".to_string()),
+			bio: None,
+			hide_progress: false,
+			role: BookClubMemberRole::Member,
+			joined_at: chrono::Utc::now().into(),
+			user_id: format!("user-{id}"),
+			book_club_id: "club-1".to_string(),
+		}
+	}
+
+	mod books {
+		use super::*;
+
+		#[tokio::test]
+		async fn cursor_pagination_orders_by_position_and_reports_next_cursor() {
+			let mock_db = MockDatabase::new(Sqlite)
+				// The "find last row for cursor" lookup, matching position=1
+				.append_query_results(vec![vec![get_test_book("book-1", 1)]])
+				// The actual page of results after the cursor
+				.append_query_results(vec![vec![get_test_book("book-2", 2)]])
+				.into_connection();
+
+			let pagination = Pagination::Cursor(CursorPagination {
+				after: Some("1".to_string()),
+				limit: 1,
+			});
+
+			let result = get_paginated_books_for_club("club-1", &mock_db, pagination)
+				.await
+				.unwrap();
+
+			assert_eq!(result.nodes.len(), 1);
+			assert_eq!(result.nodes[0].model.id, "book-2");
+
+			match result.page_info {
+				PaginationInfo::Cursor(info) => {
+					assert_eq!(info.current_cursor, Some("1".to_string()));
+					// A full page (== limit) was returned, so another page may exist
+					assert_eq!(info.next_cursor, Some("2".to_string()));
+				},
+				_ => panic!("Expected cursor pagination info"),
+			}
+		}
+
+		#[tokio::test]
+		async fn cursor_pagination_errors_when_cursor_not_found() {
+			let mock_db = MockDatabase::new(Sqlite)
+				.append_query_results::<book_club_book::Model, _, _>(vec![vec![]])
+				.into_connection();
+
+			let pagination = Pagination::Cursor(CursorPagination {
+				after: Some("missing".to_string()),
+				limit: 1,
+			});
+
+			let result =
+				get_paginated_books_for_club("club-1", &mock_db, pagination).await;
+			assert!(result.is_err());
+		}
+
+		#[tokio::test]
+		async fn offset_pagination_preserves_position_order() {
+			let mock_db = MockDatabase::new(Sqlite)
+				.append_query_results(vec![vec![maplit::btreemap! {
+					"num_items" => Into::<Value>::into(2),
+				}]])
+				.append_query_results(vec![vec![
+					get_test_book("book-1", 1),
+					get_test_book("book-2", 2),
+				]])
+				.into_connection();
+
+			let pagination = Pagination::Offset(OffsetPagination {
+				page: 1,
+				page_size: Some(20),
+				zero_based: None,
+			});
+
+			let result = get_paginated_books_for_club("club-1", &mock_db, pagination)
+				.await
+				.unwrap();
+
+			assert_eq!(result.nodes.len(), 2);
+			assert_eq!(result.nodes[0].model.id, "book-1");
+			assert_eq!(result.nodes[1].model.id, "book-2");
+
+			match result.page_info {
+				PaginationInfo::Offset(info) => {
+					assert_eq!(info.total_items, 2);
+					assert_eq!(info.current_page, 1);
+				},
+				_ => panic!("Expected offset pagination info"),
+			}
+		}
+	}
+
+	mod members {
+		use super::*;
+
+		#[tokio::test]
+		async fn offset_pagination_returns_accessible_members() {
+			let user = get_default_user();
+			let mock_db = MockDatabase::new(Sqlite)
+				.append_query_results(vec![vec![maplit::btreemap! {
+					"num_items" => Into::<Value>::into(1),
+				}]])
+				.append_query_results(vec![vec![get_test_member("member-1")]])
+				.into_connection();
+
+			let pagination = Pagination::Offset(OffsetPagination {
+				page: 1,
+				page_size: Some(20),
+				zero_based: None,
+			});
+
+			let result =
+				get_paginated_members_for_club(&user, "club-1", &mock_db, pagination)
+					.await
+					.unwrap();
+
+			assert_eq!(result.nodes.len(), 1);
+			assert_eq!(result.nodes[0].model.id, "member-1");
+		}
+
+		#[tokio::test]
+		async fn cursor_pagination_returns_next_cursor_when_page_is_full() {
+			let user = get_default_user();
+			let mock_db = MockDatabase::new(Sqlite)
+				.append_query_results(vec![vec![get_test_member("member-1")]])
+				.into_connection();
+
+			let pagination = Pagination::Cursor(CursorPagination {
+				after: None,
+				limit: 1,
+			});
+
+			let result =
+				get_paginated_members_for_club(&user, "club-1", &mock_db, pagination)
+					.await
+					.unwrap();
+
+			assert_eq!(result.nodes.len(), 1);
+			match result.page_info {
+				PaginationInfo::Cursor(info) => {
+					assert_eq!(info.current_cursor, Some("member-1".to_string()));
+					assert_eq!(info.next_cursor, Some("member-1".to_string()));
+				},
+				_ => panic!("Expected cursor pagination info"),
+			}
+		}
 	}
 }

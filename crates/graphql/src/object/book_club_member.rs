@@ -14,7 +14,7 @@ use crate::{
 #[graphql(complex)]
 pub struct BookClubMember {
 	#[graphql(flatten)]
-	model: book_club_member::Model,
+	pub(crate) model: book_club_member::Model,
 }
 
 impl From<book_club_member::Model> for BookClubMember {

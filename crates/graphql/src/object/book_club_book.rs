@@ -23,7 +23,7 @@ pub struct BookClubBook {
 	#[graphql(flatten)]
 	value: BookClubBookVariant,
 	#[graphql(flatten)]
-	model: book_club_book::Model,
+	pub(crate) model: book_club_book::Model,
 }
 
 impl From<book_club_book::Model> for BookClubBook {

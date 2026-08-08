@@ -1,8 +1,9 @@
 use crate::object::{
-	author::Author, book_club_discussion_message::BookClubDiscussionMessage,
-	directory_listing::DirectoryListing, job::Job, library::Library, log::Log,
-	media::Media, missing_entity::MissingEntity, reading_list::ReadingList,
-	series::Series, user::User,
+	author::Author, book_club_book::BookClubBook,
+	book_club_discussion_message::BookClubDiscussionMessage,
+	book_club_member::BookClubMember, directory_listing::DirectoryListing, job::Job,
+	library::Library, log::Log, media::Media, missing_entity::MissingEntity,
+	reading_list::ReadingList, series::Series, user::User,
 };
 use async_graphql::{
 	CustomValidator, InputObject, InputValueError, OneofObject, OutputType, Result,
@@ -291,6 +292,8 @@ pub enum PaginationInfo {
 
 #[derive(Debug, SimpleObject)]
 #[graphql(concrete(name = "PaginatedAuthorResponse", params(Author)))]
+#[graphql(concrete(name = "PaginatedBookClubBookResponse", params(BookClubBook)))]
+#[graphql(concrete(name = "PaginatedBookClubMemberResponse", params(BookClubMember)))]
 #[graphql(concrete(
 	name = "PaginatedDirectoryListingResponse",
 	params(DirectoryListing)
