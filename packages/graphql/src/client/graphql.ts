@@ -5032,6 +5032,7 @@ export type BookClubInvitesScreenQuery = { __typename?: 'Query', myBookClubInvit
 export type RespondToBookClubInvitationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   accept: Scalars['Boolean']['input'];
+  member?: InputMaybe<BookClubMemberInput>;
 }>;
 
 
@@ -8432,8 +8433,8 @@ export const BookClubInvitesScreenDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<BookClubInvitesScreenQuery, BookClubInvitesScreenQueryVariables>;
 export const RespondToBookClubInvitationDocument = new TypedDocumentString(`
-    mutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!) {
-  respondToBookClubInvitation(id: $id, input: {accept: $accept}) {
+    mutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {
+  respondToBookClubInvitation(id: $id, input: {accept: $accept, member: $member}) {
     id
   }
 }

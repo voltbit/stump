@@ -2,7 +2,7 @@ import { useGraphQLMutation, useRefetch, useSuspenseGraphQL } from '@stump/clien
 import { BookClubInvitesScreenQuery, graphql } from '@stump/graphql'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { useActiveServer } from '~/components/activeServer'
+import { useActiveServer, useStumpServer } from '~/components/activeServer'
 import ListEmpty from '~/components/ListEmpty'
 
 const query = graphql(`
@@ -20,9 +20,11 @@ const query = graphql(`
 	}
 `)
 
+// $member is only sent when accepting - the server rejects a decline that carries one, and
+// rejects an accept that doesn't
 const respondMutation = graphql(`
-	mutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!) {
-		respondToBookClubInvitation(id: $id, input: { accept: $accept }) {
+	mutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {
+		respondToBookClubInvitation(id: $id, input: { accept: $accept, member: $member }) {
 			id
 		}
 	}
@@ -36,6 +38,7 @@ export default function Screen() {
 	const {
 		activeServer: { id: serverID },
 	} = useActiveServer()
+	const { user } = useStumpServer()
 
 	const { data, refetch } = useSuspenseGraphQL(query, ['bookClubInvites', serverID])
 	const { mutateAsync: respond } = useGraphQLMutation(respondMutation)
@@ -45,7 +48,7 @@ export default function Screen() {
 	const [isRefetching, handleRefetch] = useRefetch(refetch)
 
 	const handleRespond = async (id: string, accept: boolean) => {
-		await respond({ id, accept })
+		await respond({ id, accept, member: accept && user ? { userId: user.id } : undefined })
 		refetch()
 	}
 

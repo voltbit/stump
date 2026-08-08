@@ -18,7 +18,7 @@ type Documents = {
     "\n\tmutation CreateBookClubMobile($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": typeof types.CreateBookClubMobileDocument,
     "\n\tquery BookClubsScreen {\n\t\tbookClubs {\n\t\t\tid\n\t\t\t...BookClubCard\n\t\t}\n\t\tmyBookClubInvitations {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.BookClubsScreenDocument,
     "\n\tquery BookClubInvitesScreen {\n\t\tmyBookClubInvitations {\n\t\t\tid\n\t\t\trole\n\t\t\tbookClubId\n\t\t\tbookClub {\n\t\t\t\tname\n\t\t\t\tdescription\n\t\t\t\tmembersCount\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookClubInvitesScreenDocument,
-    "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept }) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.RespondToBookClubInvitationDocument,
+    "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept, member: $member }) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.RespondToBookClubInvitationDocument,
     "\n\tquery SearchMedia($filter: MediaFilterInput!) {\n\t\tmedia(filter: $filter, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...BookSearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.SearchMediaDocument,
     "\n\tquery SearchSeries($filter: SeriesFilterInput!) {\n\t\tseries(filter: $filter, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...SeriesSearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.SearchSeriesDocument,
     "\n\tquery SearchLibrary($search: String!) {\n\t\tlibraries(search: $search, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...LibrarySearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.SearchLibraryDocument,
@@ -347,7 +347,7 @@ const documents: Documents = {
     "\n\tmutation CreateBookClubMobile($input: CreateBookClubInput!) {\n\t\tcreateBookClub(input: $input) {\n\t\t\tid\n\t\t\tslug\n\t\t}\n\t}\n": types.CreateBookClubMobileDocument,
     "\n\tquery BookClubsScreen {\n\t\tbookClubs {\n\t\t\tid\n\t\t\t...BookClubCard\n\t\t}\n\t\tmyBookClubInvitations {\n\t\t\tid\n\t\t}\n\t}\n": types.BookClubsScreenDocument,
     "\n\tquery BookClubInvitesScreen {\n\t\tmyBookClubInvitations {\n\t\t\tid\n\t\t\trole\n\t\t\tbookClubId\n\t\t\tbookClub {\n\t\t\t\tname\n\t\t\t\tdescription\n\t\t\t\tmembersCount\n\t\t\t}\n\t\t}\n\t}\n": types.BookClubInvitesScreenDocument,
-    "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept }) {\n\t\t\tid\n\t\t}\n\t}\n": types.RespondToBookClubInvitationDocument,
+    "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept, member: $member }) {\n\t\t\tid\n\t\t}\n\t}\n": types.RespondToBookClubInvitationDocument,
     "\n\tquery SearchMedia($filter: MediaFilterInput!) {\n\t\tmedia(filter: $filter, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...BookSearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.SearchMediaDocument,
     "\n\tquery SearchSeries($filter: SeriesFilterInput!) {\n\t\tseries(filter: $filter, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...SeriesSearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.SearchSeriesDocument,
     "\n\tquery SearchLibrary($search: String!) {\n\t\tlibraries(search: $search, pagination: { cursor: { limit: 10 } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...LibrarySearchItem\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on CursorPaginationInfo {\n\t\t\t\t\tnextCursor\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.SearchLibraryDocument,
@@ -688,7 +688,7 @@ export function graphql(source: "\n\tquery BookClubInvitesScreen {\n\t\tmyBookCl
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept }) {\n\t\t\tid\n\t\t}\n\t}\n"): typeof import('./graphql').RespondToBookClubInvitationDocument;
+export function graphql(source: "\n\tmutation RespondToBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {\n\t\trespondToBookClubInvitation(id: $id, input: { accept: $accept, member: $member }) {\n\t\t\tid\n\t\t}\n\t}\n"): typeof import('./graphql').RespondToBookClubInvitationDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
