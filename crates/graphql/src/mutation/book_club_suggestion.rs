@@ -176,6 +176,7 @@ impl BookClubSuggestionMutation {
 			return Err("Only admins and above can update suggestion status".into());
 		}
 
+		validate_not_already_resolved(&suggestion)?;
 		validate_promotion(status, promote)?;
 
 		let txn = conn.begin().await?;
@@ -193,6 +194,23 @@ impl BookClubSuggestionMutation {
 
 		Ok(updated_suggestion.into())
 	}
+}
+
+/// A suggestion can only be resolved once. Without this, calling
+/// `update_suggestion_status` twice on the same already-accepted-and-promoted
+/// suggestion (double-click, client retry, two admins racing) would silently
+/// create a second `book_club_book` row (and discussion) each time, and would
+/// let a second resolution silently overwrite who resolved it and when. This
+/// mirrors `remove_suggestion`'s existing `resolved_at.is_some()` check just
+/// above in this file.
+fn validate_not_already_resolved(
+	suggestion: &book_club_book_suggestion::Model,
+) -> Result<()> {
+	if suggestion.resolved_at.is_some() {
+		return Err("This suggestion has already been resolved".into());
+	}
+
+	Ok(())
 }
 
 /// A suggestion can only be promoted to the reading list as part of accepting it -
@@ -320,6 +338,32 @@ mod tests {
 		let mut row = BTreeMap::new();
 		row.insert("max_pos".to_string(), Value::Int(position));
 		row
+	}
+
+	#[test]
+	fn validate_not_already_resolved_allows_a_pending_suggestion() {
+		let suggestion = get_pending_suggestion(
+			None,
+			Some("Title".into()),
+			Some("Author".into()),
+			None,
+		);
+		assert!(validate_not_already_resolved(&suggestion).is_ok());
+	}
+
+	#[test]
+	fn validate_not_already_resolved_rejects_a_resolved_suggestion() {
+		let mut suggestion = get_pending_suggestion(
+			None,
+			Some("Title".into()),
+			Some("Author".into()),
+			None,
+		);
+		suggestion.status = BookClubSuggestionStatus::Accepted;
+		suggestion.resolved_at = Some(chrono::Utc::now().into());
+		suggestion.resolved_by_id = Some("member-1".to_string());
+
+		assert!(validate_not_already_resolved(&suggestion).is_err());
 	}
 
 	#[test]
@@ -567,6 +611,7 @@ mod tests {
 		like_active_model.insert(&conn).await.unwrap();
 
 		// 3. Resolve with promotion: status ACCEPTED + promote: true
+		validate_not_already_resolved(&created_suggestion).unwrap();
 		validate_promotion(BookClubSuggestionStatus::Accepted, true).unwrap();
 
 		let updated_suggestion = resolve_suggestion(
@@ -600,5 +645,9 @@ mod tests {
 			Some("media-1".to_string())
 		);
 		assert_eq!(book_in_reading_list.book_club_id, book_club_id);
+
+		// 5. A repeat call (double-click, retry, a second admin racing) on the now
+		// -resolved suggestion must be rejected, not create a second book/discussion
+		assert!(validate_not_already_resolved(&updated_suggestion).is_err());
 	}
 }
