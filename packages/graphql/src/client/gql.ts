@@ -208,6 +208,11 @@ type Documents = {
     "\n\tmutation CreateBookClubSchedule($bookClubId: ID!, $input: CreateBookClubScheduleInput!) {\n\t\tcreateBookClubSchedule(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.CreateBookClubScheduleDocument,
     "\n\tmutation UpdateBookClubSchedule(\n\t\t$bookClubId: ID!\n\t\t$id: ID!\n\t\t$input: UpdateBookClubScheduleInput!\n\t) {\n\t\tupdateBookClubSchedule(bookClubId: $bookClubId, id: $id, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.UpdateBookClubScheduleDocument,
     "\n\tfragment ScheduleCard on BookClubSchedule {\n\t\tid\n\t\tname\n\t\tkind\n\t\tconfig\n\t\tcreatedAt\n\t}\n": typeof types.ScheduleCardFragmentDoc,
+    "\n\tmutation SuggestBookClubBook($bookClubId: ID!, $input: SuggestBookInput!) {\n\t\tsuggestBook(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.SuggestBookClubBookDocument,
+    "\n\tquery BookClubSuggestionsScene($bookClubId: ID!) {\n\t\tbookClubSuggestions(bookClubId: $bookClubId) {\n\t\t\tid\n\t\t\tstatus\n\t\t\ttitle\n\t\t\tauthor\n\t\t\t...SuggestionCard\n\t\t}\n\t}\n": typeof types.BookClubSuggestionsSceneDocument,
+    "\n\tmutation ToggleBookClubSuggestionLike($suggestionId: ID!) {\n\t\ttoggleSuggestionLike(suggestionId: $suggestionId)\n\t}\n": typeof types.ToggleBookClubSuggestionLikeDocument,
+    "\n\tmutation ResolveBookClubSuggestion(\n\t\t$suggestionId: ID!\n\t\t$status: BookClubSuggestionStatus!\n\t\t$notes: String\n\t\t$promote: Boolean\n\t) {\n\t\tupdateSuggestionStatus(\n\t\t\tsuggestionId: $suggestionId\n\t\t\tstatus: $status\n\t\t\tnotes: $notes\n\t\t\tpromote: $promote\n\t\t) {\n\t\t\tid\n\t\t\tstatus\n\t\t\tnotes\n\t\t\tresolvedAt\n\t\t\tresolvedBy {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": typeof types.ResolveBookClubSuggestionDocument,
+    "\n\tfragment SuggestionCard on BookClubBookSuggestion {\n\t\tid\n\t\ttitle\n\t\tauthor\n\t\turl\n\t\tnotes\n\t\tstatus\n\t\tcreatedAt\n\t\tlikeCount\n\t\tisLikedByMe\n\t\tsuggestedBy {\n\t\t\tid\n\t\t\tusername\n\t\t\tavatarUrl\n\t\t}\n\t}\n": typeof types.SuggestionCardFragmentDoc,
     "\n\tquery BookSearchScene(\n\t\t$filter: MediaFilterInput!\n\t\t$orderBy: [MediaOrderBy!]!\n\t\t$pagination: Pagination!\n\t) {\n\t\tmedia(filter: $filter, orderBy: $orderBy, pagination: $pagination) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...BookCard\n\t\t\t\t...BookMetadata\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on OffsetPaginationInfo {\n\t\t\t\t\tcurrentPage\n\t\t\t\t\ttotalPages\n\t\t\t\t\tpageSize\n\t\t\t\t\tpageOffset\n\t\t\t\t\tzeroBased\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": typeof types.BookSearchSceneDocument,
     "\n\tquery CreateLibrarySceneExistingLibraries {\n\t\tlibraries(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tname\n\t\t\t\tpath\n\t\t\t}\n\t\t}\n\t}\n": typeof types.CreateLibrarySceneExistingLibrariesDocument,
     "\n\tmutation CreateLibrarySceneCreateLibrary($input: CreateOrUpdateLibraryInput!) {\n\t\tcreateLibrary(input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": typeof types.CreateLibrarySceneCreateLibraryDocument,
@@ -531,6 +536,11 @@ const documents: Documents = {
     "\n\tmutation CreateBookClubSchedule($bookClubId: ID!, $input: CreateBookClubScheduleInput!) {\n\t\tcreateBookClubSchedule(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": types.CreateBookClubScheduleDocument,
     "\n\tmutation UpdateBookClubSchedule(\n\t\t$bookClubId: ID!\n\t\t$id: ID!\n\t\t$input: UpdateBookClubScheduleInput!\n\t) {\n\t\tupdateBookClubSchedule(bookClubId: $bookClubId, id: $id, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": types.UpdateBookClubScheduleDocument,
     "\n\tfragment ScheduleCard on BookClubSchedule {\n\t\tid\n\t\tname\n\t\tkind\n\t\tconfig\n\t\tcreatedAt\n\t}\n": types.ScheduleCardFragmentDoc,
+    "\n\tmutation SuggestBookClubBook($bookClubId: ID!, $input: SuggestBookInput!) {\n\t\tsuggestBook(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": types.SuggestBookClubBookDocument,
+    "\n\tquery BookClubSuggestionsScene($bookClubId: ID!) {\n\t\tbookClubSuggestions(bookClubId: $bookClubId) {\n\t\t\tid\n\t\t\tstatus\n\t\t\ttitle\n\t\t\tauthor\n\t\t\t...SuggestionCard\n\t\t}\n\t}\n": types.BookClubSuggestionsSceneDocument,
+    "\n\tmutation ToggleBookClubSuggestionLike($suggestionId: ID!) {\n\t\ttoggleSuggestionLike(suggestionId: $suggestionId)\n\t}\n": types.ToggleBookClubSuggestionLikeDocument,
+    "\n\tmutation ResolveBookClubSuggestion(\n\t\t$suggestionId: ID!\n\t\t$status: BookClubSuggestionStatus!\n\t\t$notes: String\n\t\t$promote: Boolean\n\t) {\n\t\tupdateSuggestionStatus(\n\t\t\tsuggestionId: $suggestionId\n\t\t\tstatus: $status\n\t\t\tnotes: $notes\n\t\t\tpromote: $promote\n\t\t) {\n\t\t\tid\n\t\t\tstatus\n\t\t\tnotes\n\t\t\tresolvedAt\n\t\t\tresolvedBy {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n": types.ResolveBookClubSuggestionDocument,
+    "\n\tfragment SuggestionCard on BookClubBookSuggestion {\n\t\tid\n\t\ttitle\n\t\tauthor\n\t\turl\n\t\tnotes\n\t\tstatus\n\t\tcreatedAt\n\t\tlikeCount\n\t\tisLikedByMe\n\t\tsuggestedBy {\n\t\t\tid\n\t\t\tusername\n\t\t\tavatarUrl\n\t\t}\n\t}\n": types.SuggestionCardFragmentDoc,
     "\n\tquery BookSearchScene(\n\t\t$filter: MediaFilterInput!\n\t\t$orderBy: [MediaOrderBy!]!\n\t\t$pagination: Pagination!\n\t) {\n\t\tmedia(filter: $filter, orderBy: $orderBy, pagination: $pagination) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\t...BookCard\n\t\t\t\t...BookMetadata\n\t\t\t}\n\t\t\tpageInfo {\n\t\t\t\t__typename\n\t\t\t\t... on OffsetPaginationInfo {\n\t\t\t\t\tcurrentPage\n\t\t\t\t\ttotalPages\n\t\t\t\t\tpageSize\n\t\t\t\t\tpageOffset\n\t\t\t\t\tzeroBased\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n": types.BookSearchSceneDocument,
     "\n\tquery CreateLibrarySceneExistingLibraries {\n\t\tlibraries(pagination: { none: { unpaginated: true } }) {\n\t\t\tnodes {\n\t\t\t\tid\n\t\t\t\tname\n\t\t\t\tpath\n\t\t\t}\n\t\t}\n\t}\n": types.CreateLibrarySceneExistingLibrariesDocument,
     "\n\tmutation CreateLibrarySceneCreateLibrary($input: CreateOrUpdateLibraryInput!) {\n\t\tcreateLibrary(input: $input) {\n\t\t\tid\n\t\t}\n\t}\n": types.CreateLibrarySceneCreateLibraryDocument,
@@ -1433,6 +1443,26 @@ export function graphql(source: "\n\tmutation UpdateBookClubSchedule(\n\t\t$book
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n\tfragment ScheduleCard on BookClubSchedule {\n\t\tid\n\t\tname\n\t\tkind\n\t\tconfig\n\t\tcreatedAt\n\t}\n"): typeof import('./graphql').ScheduleCardFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tmutation SuggestBookClubBook($bookClubId: ID!, $input: SuggestBookInput!) {\n\t\tsuggestBook(bookClubId: $bookClubId, input: $input) {\n\t\t\tid\n\t\t}\n\t}\n"): typeof import('./graphql').SuggestBookClubBookDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tquery BookClubSuggestionsScene($bookClubId: ID!) {\n\t\tbookClubSuggestions(bookClubId: $bookClubId) {\n\t\t\tid\n\t\t\tstatus\n\t\t\ttitle\n\t\t\tauthor\n\t\t\t...SuggestionCard\n\t\t}\n\t}\n"): typeof import('./graphql').BookClubSuggestionsSceneDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tmutation ToggleBookClubSuggestionLike($suggestionId: ID!) {\n\t\ttoggleSuggestionLike(suggestionId: $suggestionId)\n\t}\n"): typeof import('./graphql').ToggleBookClubSuggestionLikeDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tmutation ResolveBookClubSuggestion(\n\t\t$suggestionId: ID!\n\t\t$status: BookClubSuggestionStatus!\n\t\t$notes: String\n\t\t$promote: Boolean\n\t) {\n\t\tupdateSuggestionStatus(\n\t\t\tsuggestionId: $suggestionId\n\t\t\tstatus: $status\n\t\t\tnotes: $notes\n\t\t\tpromote: $promote\n\t\t) {\n\t\t\tid\n\t\t\tstatus\n\t\t\tnotes\n\t\t\tresolvedAt\n\t\t\tresolvedBy {\n\t\t\t\tid\n\t\t\t\tusername\n\t\t\t}\n\t\t}\n\t}\n"): typeof import('./graphql').ResolveBookClubSuggestionDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n\tfragment SuggestionCard on BookClubBookSuggestion {\n\t\tid\n\t\ttitle\n\t\tauthor\n\t\turl\n\t\tnotes\n\t\tstatus\n\t\tcreatedAt\n\t\tlikeCount\n\t\tisLikedByMe\n\t\tsuggestedBy {\n\t\t\tid\n\t\t\tusername\n\t\t\tavatarUrl\n\t\t}\n\t}\n"): typeof import('./graphql').SuggestionCardFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

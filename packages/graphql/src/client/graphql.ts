@@ -6351,6 +6351,43 @@ export type UpdateBookClubScheduleMutation = { __typename?: 'Mutation', updateBo
 
 export type ScheduleCardFragment = { __typename?: 'BookClubSchedule', id: string, name: string, kind: BookClubScheduleKind, config: any, createdAt: any } & { ' $fragmentName'?: 'ScheduleCardFragment' };
 
+export type SuggestBookClubBookMutationVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+  input: SuggestBookInput;
+}>;
+
+
+export type SuggestBookClubBookMutation = { __typename?: 'Mutation', suggestBook: { __typename?: 'BookClubBookSuggestion', id: string } };
+
+export type BookClubSuggestionsSceneQueryVariables = Exact<{
+  bookClubId: Scalars['ID']['input'];
+}>;
+
+
+export type BookClubSuggestionsSceneQuery = { __typename?: 'Query', bookClubSuggestions: Array<(
+    { __typename?: 'BookClubBookSuggestion', id: string, status: BookClubSuggestionStatus, title?: string | null, author?: string | null }
+    & { ' $fragmentRefs'?: { 'SuggestionCardFragment': SuggestionCardFragment } }
+  )> };
+
+export type ToggleBookClubSuggestionLikeMutationVariables = Exact<{
+  suggestionId: Scalars['ID']['input'];
+}>;
+
+
+export type ToggleBookClubSuggestionLikeMutation = { __typename?: 'Mutation', toggleSuggestionLike: boolean };
+
+export type ResolveBookClubSuggestionMutationVariables = Exact<{
+  suggestionId: Scalars['ID']['input'];
+  status: BookClubSuggestionStatus;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  promote?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type ResolveBookClubSuggestionMutation = { __typename?: 'Mutation', updateSuggestionStatus: { __typename?: 'BookClubBookSuggestion', id: string, status: BookClubSuggestionStatus, notes?: string | null, resolvedAt?: any | null, resolvedBy?: { __typename?: 'BookClubMember', id: string, username: string } | null } };
+
+export type SuggestionCardFragment = { __typename?: 'BookClubBookSuggestion', id: string, title?: string | null, author?: string | null, url?: string | null, notes?: string | null, status: BookClubSuggestionStatus, createdAt: any, likeCount: number, isLikedByMe: boolean, suggestedBy: { __typename?: 'BookClubMember', id: string, username: string, avatarUrl?: string | null } } & { ' $fragmentName'?: 'SuggestionCardFragment' };
+
 export type BookSearchSceneQueryVariables = Exact<{
   filter: MediaFilterInput;
   orderBy: Array<MediaOrderBy> | MediaOrderBy;
@@ -8069,6 +8106,24 @@ export const ScheduleCardFragmentDoc = new TypedDocumentString(`
   createdAt
 }
     `, {"fragmentName":"ScheduleCard"}) as unknown as TypedDocumentString<ScheduleCardFragment, unknown>;
+export const SuggestionCardFragmentDoc = new TypedDocumentString(`
+    fragment SuggestionCard on BookClubBookSuggestion {
+  id
+  title
+  author
+  url
+  notes
+  status
+  createdAt
+  likeCount
+  isLikedByMe
+  suggestedBy {
+    id
+    username
+    avatarUrl
+  }
+}
+    `, {"fragmentName":"SuggestionCard"}) as unknown as TypedDocumentString<SuggestionCardFragment, unknown>;
 export const ContinueReadingBookFragmentDoc = new TypedDocumentString(`
     fragment ContinueReadingBook on Media {
   id
@@ -12201,6 +12256,63 @@ export const UpdateBookClubScheduleDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<UpdateBookClubScheduleMutation, UpdateBookClubScheduleMutationVariables>;
+export const SuggestBookClubBookDocument = new TypedDocumentString(`
+    mutation SuggestBookClubBook($bookClubId: ID!, $input: SuggestBookInput!) {
+  suggestBook(bookClubId: $bookClubId, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<SuggestBookClubBookMutation, SuggestBookClubBookMutationVariables>;
+export const BookClubSuggestionsSceneDocument = new TypedDocumentString(`
+    query BookClubSuggestionsScene($bookClubId: ID!) {
+  bookClubSuggestions(bookClubId: $bookClubId) {
+    id
+    status
+    title
+    author
+    ...SuggestionCard
+  }
+}
+    fragment SuggestionCard on BookClubBookSuggestion {
+  id
+  title
+  author
+  url
+  notes
+  status
+  createdAt
+  likeCount
+  isLikedByMe
+  suggestedBy {
+    id
+    username
+    avatarUrl
+  }
+}`) as unknown as TypedDocumentString<BookClubSuggestionsSceneQuery, BookClubSuggestionsSceneQueryVariables>;
+export const ToggleBookClubSuggestionLikeDocument = new TypedDocumentString(`
+    mutation ToggleBookClubSuggestionLike($suggestionId: ID!) {
+  toggleSuggestionLike(suggestionId: $suggestionId)
+}
+    `) as unknown as TypedDocumentString<ToggleBookClubSuggestionLikeMutation, ToggleBookClubSuggestionLikeMutationVariables>;
+export const ResolveBookClubSuggestionDocument = new TypedDocumentString(`
+    mutation ResolveBookClubSuggestion($suggestionId: ID!, $status: BookClubSuggestionStatus!, $notes: String, $promote: Boolean) {
+  updateSuggestionStatus(
+    suggestionId: $suggestionId
+    status: $status
+    notes: $notes
+    promote: $promote
+  ) {
+    id
+    status
+    notes
+    resolvedAt
+    resolvedBy {
+      id
+      username
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ResolveBookClubSuggestionMutation, ResolveBookClubSuggestionMutationVariables>;
 export const BookSearchSceneDocument = new TypedDocumentString(`
     query BookSearchScene($filter: MediaFilterInput!, $orderBy: [MediaOrderBy!]!, $pagination: Pagination!) {
   media(filter: $filter, orderBy: $orderBy, pagination: $pagination) {

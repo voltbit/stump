@@ -39,6 +39,11 @@ export default function BookClubNavigation() {
 				to: 'discussion',
 			},
 			{
+				isActive: location.pathname.match(/\/clubs\/[^/]+\/suggestions(\/.*)?$/),
+				label: 'Suggestions',
+				to: 'suggestions',
+			},
+			{
 				isActive: location.pathname.match(/\/clubs\/[^/]+\/members(\/.*)?$/),
 				label: 'Members',
 				to: 'members',
