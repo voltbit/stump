@@ -6204,6 +6204,11 @@ export type CreateBookClubSceneMutationVariables = Exact<{
 
 export type CreateBookClubSceneMutation = { __typename?: 'Mutation', createBookClub: { __typename?: 'BookClub', id: string, slug: string } };
 
+export type BookClubExploreSceneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type BookClubExploreSceneQuery = { __typename?: 'Query', bookClubs: Array<{ __typename?: 'BookClub', id: string, name: string, slug: string, description?: string | null, emoji?: string | null, isPrivate: boolean, membersCount: number, membership?: { __typename?: 'BookClubMember', id: string } | null }> };
+
 export type UpcomingDiscussionBannerQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -12003,6 +12008,22 @@ export const CreateBookClubSceneDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CreateBookClubSceneMutation, CreateBookClubSceneMutationVariables>;
+export const BookClubExploreSceneDocument = new TypedDocumentString(`
+    query BookClubExploreScene {
+  bookClubs(all: true) {
+    id
+    name
+    slug
+    description
+    emoji
+    isPrivate
+    membersCount
+    membership {
+      id
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<BookClubExploreSceneQuery, BookClubExploreSceneQueryVariables>;
 export const UpcomingDiscussionBannerDocument = new TypedDocumentString(`
     query UpcomingDiscussionBanner($id: ID!) {
   bookClubById(id: $id) {
