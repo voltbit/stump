@@ -6173,6 +6173,20 @@ export type UpdateBookClubMutationVariables = Exact<{
 
 export type UpdateBookClubMutation = { __typename?: 'Mutation', updateBookClub: { __typename?: 'BookClub', id: string, name: string, emoji?: string | null, isPrivate: boolean, roleSpec: any, description?: string | null } };
 
+export type MyBookClubInvitationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyBookClubInvitationsQuery = { __typename?: 'Query', myBookClubInvitations: Array<{ __typename?: 'BookClubInvitation', id: string, role: BookClubMemberRole, bookClubId: string, bookClub: { __typename?: 'BookClub', id: string, name: string, slug: string, membersCount: number, roleSpec: any } }> };
+
+export type RespondToMyBookClubInvitationMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  accept: Scalars['Boolean']['input'];
+  member?: InputMaybe<BookClubMemberInput>;
+}>;
+
+
+export type RespondToMyBookClubInvitationMutation = { __typename?: 'Mutation', respondToBookClubInvitation: { __typename?: 'BookClubInvitation', id: string } };
+
 export type UserBookClubsSceneQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -6230,6 +6244,26 @@ export type CreateBookClubMemberMutationVariables = Exact<{
 
 export type CreateBookClubMemberMutation = { __typename?: 'Mutation', createBookClubMember: { __typename?: 'BookClubMember', id: string } };
 
+export type InviteBookClubUserUsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type InviteBookClubUserUsersQuery = { __typename?: 'Query', users: { __typename?: 'PaginatedUserResponse', nodes: Array<{ __typename?: 'User', id: string, username: string }> } };
+
+export type InviteBookClubUserExistingQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type InviteBookClubUserExistingQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, members: { __typename?: 'PaginatedBookClubMemberResponse', nodes: Array<{ __typename?: 'BookClubMember', userId: string }> }, invitations: Array<{ __typename?: 'BookClubInvitation', userId: string }> } };
+
+export type CreateBookClubInvitationMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: BookClubInvitationInput;
+}>;
+
+
+export type CreateBookClubInvitationMutation = { __typename?: 'Mutation', createBookClubInvitation: { __typename?: 'BookClubInvitation', id: string } };
+
 export type BookClubMembersTableQueryVariables = Exact<{
   id: Scalars['ID']['input'];
   pagination: Pagination;
@@ -6245,6 +6279,13 @@ export type RemoveBookClubMemberMutationVariables = Exact<{
 
 
 export type RemoveBookClubMemberMutation = { __typename?: 'Mutation', removeBookClubMember: { __typename?: 'BookClubMember', id: string } };
+
+export type BookClubPendingInvitationsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type BookClubPendingInvitationsQuery = { __typename?: 'Query', bookClubById: { __typename?: 'BookClub', id: string, invitations: Array<{ __typename?: 'BookClubInvitation', id: string, role: BookClubMemberRole, userId: string, user: { __typename?: 'User', id: string, username: string } }> } };
 
 export type ReadingListBookItemFragment = { __typename?: 'BookClubBook', id: string, title?: string | null, author?: string | null, url?: string | null, imageUrl?: string | null, completedAt?: any | null, entity?: { __typename?: 'Media', id: string, resolvedName: string, metadata?: { __typename?: 'MediaMetadata', writers: Array<string> } | null, thumbnail: { __typename?: 'ImageRef', url: string } } | null } & { ' $fragmentName'?: 'ReadingListBookItemFragment' };
 
@@ -11854,6 +11895,29 @@ export const UpdateBookClubDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<UpdateBookClubMutation, UpdateBookClubMutationVariables>;
+export const MyBookClubInvitationsDocument = new TypedDocumentString(`
+    query MyBookClubInvitations {
+  myBookClubInvitations {
+    id
+    role
+    bookClubId
+    bookClub {
+      id
+      name
+      slug
+      membersCount
+      roleSpec
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<MyBookClubInvitationsQuery, MyBookClubInvitationsQueryVariables>;
+export const RespondToMyBookClubInvitationDocument = new TypedDocumentString(`
+    mutation RespondToMyBookClubInvitation($id: ID!, $accept: Boolean!, $member: BookClubMemberInput) {
+  respondToBookClubInvitation(id: $id, input: {accept: $accept, member: $member}) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<RespondToMyBookClubInvitationMutation, RespondToMyBookClubInvitationMutationVariables>;
 export const UserBookClubsSceneDocument = new TypedDocumentString(`
     query UserBookClubsScene {
   bookClubs(all: false) {
@@ -11958,6 +12022,38 @@ export const CreateBookClubMemberDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CreateBookClubMemberMutation, CreateBookClubMemberMutationVariables>;
+export const InviteBookClubUserUsersDocument = new TypedDocumentString(`
+    query InviteBookClubUserUsers {
+  users(pagination: {none: {unpaginated: true}}) {
+    nodes {
+      id
+      username
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<InviteBookClubUserUsersQuery, InviteBookClubUserUsersQueryVariables>;
+export const InviteBookClubUserExistingDocument = new TypedDocumentString(`
+    query InviteBookClubUserExisting($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    members(pagination: {none: {unpaginated: true}}) {
+      nodes {
+        userId
+      }
+    }
+    invitations {
+      userId
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<InviteBookClubUserExistingQuery, InviteBookClubUserExistingQueryVariables>;
+export const CreateBookClubInvitationDocument = new TypedDocumentString(`
+    mutation CreateBookClubInvitation($id: ID!, $input: BookClubInvitationInput!) {
+  createBookClubInvitation(id: $id, input: $input) {
+    id
+  }
+}
+    `) as unknown as TypedDocumentString<CreateBookClubInvitationMutation, CreateBookClubInvitationMutationVariables>;
 export const BookClubMembersTableDocument = new TypedDocumentString(`
     query BookClubMembersTable($id: ID!, $pagination: Pagination!) {
   bookClubById(id: $id) {
@@ -11992,6 +12088,22 @@ export const RemoveBookClubMemberDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RemoveBookClubMemberMutation, RemoveBookClubMemberMutationVariables>;
+export const BookClubPendingInvitationsDocument = new TypedDocumentString(`
+    query BookClubPendingInvitations($id: ID!) {
+  bookClubById(id: $id) {
+    id
+    invitations {
+      id
+      role
+      userId
+      user {
+        id
+        username
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<BookClubPendingInvitationsQuery, BookClubPendingInvitationsQueryVariables>;
 export const BookClubReadingListSceneDocument = new TypedDocumentString(`
     query BookClubReadingListScene($id: ID!) {
   bookClubById(id: $id) {
