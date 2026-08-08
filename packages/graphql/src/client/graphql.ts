@@ -357,6 +357,8 @@ export type BookClubMember = {
   bio?: Maybe<Scalars['String']['output']>;
   bookClubId: Scalars['String']['output'];
   displayName?: Maybe<Scalars['String']['output']>;
+  /** The member's favorite book, if they have set one */
+  favoriteBook?: Maybe<BookClubMemberFavoriteBook>;
   hideProgress: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   isCreator: Scalars['Boolean']['output'];
@@ -365,6 +367,23 @@ export type BookClubMember = {
   user: User;
   userId: Scalars['String']['output'];
   username: Scalars['String']['output'];
+};
+
+export type BookClubMemberFavoriteBook = {
+  __typename?: 'BookClubMemberFavoriteBook';
+  author?: Maybe<Scalars['String']['output']>;
+  bookId?: Maybe<Scalars['String']['output']>;
+  /**
+   * The linked media entity, if this favorite book references a book stored on the
+   * server rather than (or in addition to) a free-form title/author/url
+   */
+  entity?: Maybe<Media>;
+  id: Scalars['String']['output'];
+  imageUrl?: Maybe<Scalars['String']['output']>;
+  memberId: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 export type BookClubMemberInput = {
@@ -2166,6 +2185,11 @@ export type Mutation = {
   sendAttachmentEmail: SendAttachmentEmailOutput;
   /** Send a message in a discussion */
   sendMessage: BookClubDiscussionMessage;
+  /**
+   * Sets (or replaces) the caller's own favorite book within a book club. Each member
+   * may have at most one favorite book; calling this again overwrites the previous one.
+   */
+  setBookClubMemberFavoriteBook: BookClubMemberFavoriteBook;
   /** Bulk-set locked metadata fields for all media metadata in a library */
   setLibraryMediaLockedFields: Scalars['Int']['output'];
   /** Bulk-set locked metadata fields for all series metadata in a library */
@@ -2200,6 +2224,18 @@ export type Mutation = {
   updateAnnotation: MediaAnnotation;
   updateApiKey: Apikey;
   updateBookClub: BookClub;
+  /**
+   * Updates the caller's own member profile (display name, bio, hide progress) within
+   * a book club. A member may only ever update their own profile.
+   */
+  updateBookClubMemberProfile: BookClubMember;
+  /**
+   * Changes another member's role within the club. Only Admins and above may call
+   * this. Beyond that: only the Creator may grant or revoke the Admin role, nobody
+   * can change the Creator's role or promote a member to Creator, and a member can
+   * never change their own role.
+   */
+  updateBookClubMemberRole: BookClubMember;
   /** Update an existing schedule for the book club (Admin+) */
   updateBookClubSchedule: BookClubSchedule;
   /** Rename a custom emoji */
@@ -2785,6 +2821,12 @@ export type MutationSendMessageArgs = {
 };
 
 
+export type MutationSetBookClubMemberFavoriteBookArgs = {
+  bookClubId: Scalars['ID']['input'];
+  input: SetBookClubMemberFavoriteBookInput;
+};
+
+
 export type MutationSetLibraryMediaLockedFieldsArgs = {
   libraryId: Scalars['ID']['input'];
   lockedFields: Array<MetadataField>;
@@ -2859,6 +2901,19 @@ export type MutationUpdateApiKeyArgs = {
 export type MutationUpdateBookClubArgs = {
   id: Scalars['ID']['input'];
   input: UpdateBookClubInput;
+};
+
+
+export type MutationUpdateBookClubMemberProfileArgs = {
+  bookClubId: Scalars['ID']['input'];
+  input: UpdateMemberProfileInput;
+};
+
+
+export type MutationUpdateBookClubMemberRoleArgs = {
+  bookClubId: Scalars['ID']['input'];
+  memberId: Scalars['ID']['input'];
+  role: BookClubMemberRole;
 };
 
 
@@ -4286,6 +4341,16 @@ export type ServerConfigModel = {
   publicUrl?: Maybe<Scalars['String']['output']>;
 };
 
+export type SetBookClubMemberFavoriteBookInput = {
+  author?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of a book stored on the server (e.g. a `media` entity ID) */
+  bookId?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  url?: InputMaybe<Scalars['String']['input']>;
+};
+
 /**
  * A work that has multiple authors (co-authored). This wrapper allows querying
  * the authors/co-authors of the work in context.
@@ -4657,6 +4722,12 @@ export type UpdateBookClubScheduleInput = {
 
 export type UpdateCustomEmojiInput = {
   name: Scalars['String']['input'];
+};
+
+export type UpdateMemberProfileInput = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  hideProgress?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateScheduledJobInput = {

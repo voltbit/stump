@@ -311,6 +311,24 @@ type BookClubMember {
 	username: String!
 	user: User!
 	isCreator: Boolean!
+	"The member's favorite book, if they have set one"
+	favoriteBook: BookClubMemberFavoriteBook
+}
+
+type BookClubMemberFavoriteBook {
+	id: String!
+	title: String
+	author: String
+	url: String
+	notes: String
+	memberId: String!
+	bookId: String
+	imageUrl: String
+	"""
+	The linked media entity, if this favorite book references a book stored on the
+	server rather than (or in addition to) a free-form title/author/url
+	"""
+	entity: Media
 }
 
 input BookClubMemberInput {
@@ -1882,6 +1900,23 @@ type Mutation {
 	removeBookClubMember(bookClubId: ID!, memberId: ID!): BookClubMember!
 	"Deletes the membership of the caller to the target book club"
 	leaveBookClub(bookClubId: ID!): BookClubMember!
+	"""
+	Updates the caller's own member profile (display name, bio, hide progress) within
+	a book club. A member may only ever update their own profile.
+	"""
+	updateBookClubMemberProfile(bookClubId: ID!, input: UpdateMemberProfileInput!): BookClubMember!
+	"""
+	Sets (or replaces) the caller's own favorite book within a book club. Each member
+	may have at most one favorite book; calling this again overwrites the previous one.
+	"""
+	setBookClubMemberFavoriteBook(bookClubId: ID!, input: SetBookClubMemberFavoriteBookInput!): BookClubMemberFavoriteBook!
+	"""
+	Changes another member's role within the club. Only Admins and above may call
+	this. Beyond that: only the Creator may grant or revoke the Admin role, nobody
+	can change the Creator's role or promote a member to Creator, and a member can
+	never change their own role.
+	"""
+	updateBookClubMemberRole(bookClubId: ID!, memberId: ID!, role: BookClubMemberRole!): BookClubMember!
 	"Add a book to the club's queue"
 	addBookToClub(bookClubId: ID!, input: AddBookToClubInput!): BookClub!
 	"Mark the current book as completed"
@@ -3089,6 +3124,16 @@ type ServerConfigModel {
 	initialWalSetupComplete: Boolean!
 }
 
+input SetBookClubMemberFavoriteBookInput {
+	"The ID of a book stored on the server (e.g. a `media` entity ID)"
+	bookId: String
+	title: String
+	author: String
+	url: String
+	imageUrl: String
+	notes: String
+}
+
 """
 A work that has multiple authors (co-authored). This wrapper allows querying
 the authors/co-authors of the work in context.
@@ -3435,6 +3480,12 @@ input UpdateBookClubScheduleInput {
 
 input UpdateCustomEmojiInput {
 	name: String!
+}
+
+input UpdateMemberProfileInput {
+	displayName: String
+	bio: String
+	hideProgress: Boolean
 }
 
 input UpdateScheduledJobInput {
