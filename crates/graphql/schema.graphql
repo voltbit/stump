@@ -147,11 +147,11 @@ type BookClub {
 	"All previous books that were read, ordered by completion date (most recent first)"
 	previousBooks: [BookClubBook!]!
 	"All books in the club's queue, ordered by position"
-	books: [BookClubBook!]!
+	books(pagination: Pagination! = {offset: {page: 1, pageSize: 20, zeroBased: false}}): PaginatedBookClubBookResponse!
 	"All schedules configured for this book club"
 	schedules: [BookClubSchedule!]!
 	invitations: [BookClubInvitation!]!
-	members: [BookClubMember!]!
+	members(pagination: Pagination! = {offset: {page: 1, pageSize: 20, zeroBased: false}}): PaginatedBookClubMemberResponse!
 	moderators: [BookClubMember!]!
 	membersCount: Int!
 	membership: BookClubMember
@@ -2358,6 +2358,16 @@ input PagedProgressInput {
 
 type PaginatedAuthorResponse {
 	nodes: [Author!]!
+	pageInfo: PaginationInfo!
+}
+
+type PaginatedBookClubBookResponse {
+	nodes: [BookClubBook!]!
+	pageInfo: PaginationInfo!
+}
+
+type PaginatedBookClubMemberResponse {
+	nodes: [BookClubMember!]!
 	pageInfo: PaginationInfo!
 }
 
