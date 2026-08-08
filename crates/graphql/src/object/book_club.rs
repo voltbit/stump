@@ -270,9 +270,20 @@ impl BookClub {
 	}
 }
 
-/// Fetches a page of the books in a club's queue, ordered by position. The `position`
-/// column is used as the cursor column (rather than `id`) so that cursor pagination
-/// stays consistent with the queue order even after `reorderBooks` reassigns positions.
+/// Fetches a page of the books in a club's queue. `find_for_book_club_id`'s
+/// `ORDER BY position` (the queue order) is preserved for offset/none-mode pagination,
+/// but cursor-mode pagination cursors on `id` rather than `position`.
+///
+/// `position` is *not* DB-enforced unique: the migration only declares it `NOT NULL`
+/// (see `m20251116_000000_book_club_enhancements`), and `reorderBooks` only reassigns
+/// positions for the book IDs it's given, so a partial reorder can leave two books
+/// sharing a position. The generic cursor helper's "find last row for cursor" lookup
+/// filters by `cursor_column.eq(after)` and takes `.one(conn)` - with a non-unique
+/// cursor column, that lookup can match more than one row and silently pick one,
+/// producing skipped or repeated entries. Every other cursor-paginated field in this
+/// codebase cursors on a DB-unique primary key (`log::Column::Id`,
+/// `reading_list::Column::Id`) for exactly this reason, so `books` follows that
+/// convention rather than being the one exception.
 async fn get_paginated_books_for_club(
 	book_club_id: &str,
 	conn: &DatabaseConnection,
@@ -282,10 +293,10 @@ async fn get_paginated_books_for_club(
 
 	get_paginated_results(
 		query,
-		book_club_book::Column::Position,
+		book_club_book::Column::Id,
 		conn,
 		pagination,
-		|model: &book_club_book::Model| model.position.to_string(),
+		|model: &book_club_book::Model| model.id.clone(),
 	)
 	.await
 }
@@ -354,16 +365,16 @@ mod tests {
 		use super::*;
 
 		#[tokio::test]
-		async fn cursor_pagination_orders_by_position_and_reports_next_cursor() {
+		async fn cursor_pagination_cursors_by_id_and_reports_next_cursor() {
 			let mock_db = MockDatabase::new(Sqlite)
-				// The "find last row for cursor" lookup, matching position=1
+				// The "find last row for cursor" lookup, matching id="book-1"
 				.append_query_results(vec![vec![get_test_book("book-1", 1)]])
 				// The actual page of results after the cursor
 				.append_query_results(vec![vec![get_test_book("book-2", 2)]])
 				.into_connection();
 
 			let pagination = Pagination::Cursor(CursorPagination {
-				after: Some("1".to_string()),
+				after: Some("book-1".to_string()),
 				limit: 1,
 			});
 
@@ -376,12 +387,40 @@ mod tests {
 
 			match result.page_info {
 				PaginationInfo::Cursor(info) => {
-					assert_eq!(info.current_cursor, Some("1".to_string()));
+					assert_eq!(info.current_cursor, Some("book-1".to_string()));
 					// A full page (== limit) was returned, so another page may exist
-					assert_eq!(info.next_cursor, Some("2".to_string()));
+					assert_eq!(info.next_cursor, Some("book-2".to_string()));
 				},
 				_ => panic!("Expected cursor pagination info"),
 			}
+		}
+
+		/// Regression test for cursoring on `position`: two books can legitimately share a
+		/// `position` after a partial `reorderBooks` call (nothing in the schema enforces
+		/// uniqueness). Cursoring on the unique `id` instead means the cursor lookup always
+		/// finds exactly the row the client asked to page after, even when duplicate
+		/// positions exist elsewhere in the club's queue.
+		#[tokio::test]
+		async fn cursor_pagination_is_unambiguous_when_positions_collide() {
+			let mock_db = MockDatabase::new(Sqlite)
+				// The "find last row for cursor" lookup, matching id="book-1" specifically -
+				// not merely "some row with position=3"
+				.append_query_results(vec![vec![get_test_book("book-1", 3)]])
+				// The next row, which happens to share the same position as book-1
+				.append_query_results(vec![vec![get_test_book("book-2", 3)]])
+				.into_connection();
+
+			let pagination = Pagination::Cursor(CursorPagination {
+				after: Some("book-1".to_string()),
+				limit: 1,
+			});
+
+			let result = get_paginated_books_for_club("club-1", &mock_db, pagination)
+				.await
+				.unwrap();
+
+			assert_eq!(result.nodes.len(), 1);
+			assert_eq!(result.nodes[0].model.id, "book-2");
 		}
 
 		#[tokio::test]
