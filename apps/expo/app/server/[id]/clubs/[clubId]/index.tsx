@@ -75,14 +75,16 @@ export default function Screen() {
 	const colors = useColors()
 
 	const club = data.bookClubById
-	const isAdmin = club.membership?.role === 'ADMIN' || club.membership?.role === 'CREATOR'
+	// Any member can open settings - the screen itself role-gates what's shown there (edit fields
+	// for Admin/Creator, leave for any non-Creator member, delete for Creator only).
+	const isMember = !!club.membership
 
 	const navigation = useNavigation()
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: true,
 			title: club.name,
-			headerRight: isAdmin
+			headerRight: isMember
 				? () => (
 						<Pressable onPress={() => router.push(`/server/${serverID}/clubs/${clubId}/settings`)}>
 							{SettingsIcon}
@@ -90,7 +92,7 @@ export default function Screen() {
 					)
 				: undefined,
 		})
-	}, [navigation, club.name, isAdmin, router, serverID, clubId])
+	}, [navigation, club.name, isMember, router, serverID, clubId])
 
 	const currentBookCompletedAt = club.currentBook?.entity?.readHistory?.at(0)?.completedAt
 	const activeProgress = club.currentBook?.entity?.readProgress
