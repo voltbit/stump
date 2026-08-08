@@ -14,7 +14,6 @@ const BookClubExplorerScene = lazy(() => import('./explore/BookClubExploreScene.
 
 // club-specific routes
 const BookClubHomeScene = lazy(() => import('./tabs/home'))
-const BookClubDiscussionScene = lazy(() => import('./tabs/discussion/index.ts'))
 const BookClubSuggestionsScene = lazy(() => import('./tabs/suggestions'))
 const BookClubMembersScene = lazy(() => import('./tabs/members'))
 
@@ -52,7 +51,6 @@ export default function BookClubRouter() {
 			<Route path=":slug/*" element={<BookClubHomeLayout />}>
 				<Route path="" element={<BookClubHomeScene />} />
 				<Route path="home" element={<Navigate to=".." replace />} />
-				<Route path="discussion" element={<BookClubDiscussionScene />} />
 				<Route path="suggestions" element={<BookClubSuggestionsScene />} />
 				<Route path="members" element={<BookClubMembersScene />} />
 				<Route path="settings/*" element={<BookClubSettingsRouter />} />

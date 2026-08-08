@@ -27,25 +27,11 @@ type SettingsPage =
 	| 'email/new'
 	| 'notifications'
 type DocTopic = 'access-control' | 'features/book-clubs'
-type BookClubTab = 'overview' | 'members' | 'discussion' | 'settings'
+type BookClubTab = 'overview' | 'members' | 'settings'
 
 const pathsInternal = {
 	bookClub: (slug: string, tab?: BookClubTab) => `/clubs/${slug}${tab ? `/${tab}` : ''}`,
 	bookClubCreate: () => '/clubs/create',
-	bookClubDiscussion: (slug: string, discussionId?: string) => {
-		const url = pathsInternal.bookClub(slug, 'discussion')
-		if (discussionId?.length) {
-			return `${url}?archivedChat=${discussionId}`
-		}
-		return url
-	},
-	bookClubDiscussionMessage: (slug: string, messageId: string, discussionId?: string) => {
-		const url = pathsInternal.bookClubDiscussion(slug, discussionId) + '/thread/' + messageId
-		if (discussionId?.length) {
-			return `${url}?archivedChat=${discussionId}`
-		}
-		return url
-	},
 	bookClubScheduler: (id: string) => pathsInternal.bookClub(id, 'settings') + '/scheduler',
 	bookClubSettings: (id: string) => pathsInternal.bookClub(id, 'settings'),
 	bookClubs: () => '/clubs',
@@ -139,10 +125,6 @@ export function usePaths() {
 	return {
 		bookClub: (id: string, tab?: BookClubTab) => `${basePath}${pathsInternal.bookClub(id, tab)}`,
 		bookClubCreate: () => `${basePath}${pathsInternal.bookClubCreate()}`,
-		bookClubDiscussion: (id: string, discussionId?: string) =>
-			`${basePath}${pathsInternal.bookClubDiscussion(id, discussionId)}`,
-		bookClubDiscussionMessage: (id: string, messageId: string, discussionId?: string) =>
-			`${basePath}${pathsInternal.bookClubDiscussionMessage(id, messageId, discussionId)}`,
 		bookClubScheduler: (id: string) => `${basePath}${pathsInternal.bookClubScheduler(id)}`,
 		bookClubSettings: (id: string) => `${basePath}${pathsInternal.bookClubSettings(id)}`,
 		bookClubs: () => `${basePath}${pathsInternal.bookClubs()}`,

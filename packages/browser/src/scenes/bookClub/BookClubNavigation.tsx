@@ -1,21 +1,16 @@
 import { cn, cx, Link } from '@stump/components'
-import { noop } from 'lodash'
 import { useMemo } from 'react'
 import { useLocation } from 'react-router'
 
 import { useBookClubContext } from '@/components/bookClub'
 import { usePreferences } from '@/hooks'
 
-// TODO(book-clubs): Implement
-// TODO: when viewing a thread, only show something like "<-- Return to chat board"
 export default function BookClubNavigation() {
 	const location = useLocation()
 	const {
 		preferences: { primaryNavigationMode, layoutMaxWidthPx },
 	} = usePreferences()
 	const { viewerIsMember } = useBookClubContext()
-	// const { prefetch } = usePrefetchClubChat({ id })
-	const prefetch = noop
 
 	const tabs = useMemo(() => {
 		const base = [
@@ -33,12 +28,6 @@ export default function BookClubNavigation() {
 		return [
 			...base,
 			{
-				isActive: location.pathname.match(/\/clubs\/[^/]+\/discussion(\/.*)?$/),
-				label: 'Discussion',
-				onHover: () => prefetch(),
-				to: 'discussion',
-			},
-			{
 				isActive: location.pathname.match(/\/clubs\/[^/]+\/suggestions(\/.*)?$/),
 				label: 'Suggestions',
 				to: 'suggestions',
@@ -54,7 +43,7 @@ export default function BookClubNavigation() {
 				to: 'settings',
 			},
 		]
-	}, [location, viewerIsMember, prefetch])
+	}, [location, viewerIsMember])
 
 	const preferTopBar = primaryNavigationMode === 'TOPBAR'
 
