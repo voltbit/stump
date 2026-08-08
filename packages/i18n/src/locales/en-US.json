@@ -116,6 +116,10 @@
 				"label": "Private club",
 				"description": "If enabled, only users you invite will be able to join your book club"
 			},
+			"emoji": {
+				"label": "Emoji",
+				"description": "Shown next to your club's name in the sidebar and header"
+			},
 			"member_role_spec": {
 				"heading": "Custom role mapping",
 				"subtitle": [

@@ -30,6 +30,7 @@ export const buildSchema = (
 		creatorDisplayName: z.string().optional(),
 		creatorHideProgress: isCreating ? z.boolean().default(false) : z.boolean().optional(),
 		description: z.string().optional(),
+		emoji: z.string().optional(),
 		isPrivate: z.boolean().default(false),
 		memberRoleSpec: memberRoleSpecSchema.optional(),
 		name: z
@@ -52,7 +53,8 @@ export const formDefaults = (
 	club?: NonNullable<BookClubLayoutQuery['bookClubBySlug']>,
 ): CreateOrUpdateBookClubSchema => ({
 	creatorDisplayName: club?.name || '',
-	description: '',
+	description: club?.description || '',
+	emoji: club?.emoji || undefined,
 	isPrivate: club?.isPrivate ?? false,
 	memberRoleSpec: club?.roleSpec,
 	name: club?.name || '',

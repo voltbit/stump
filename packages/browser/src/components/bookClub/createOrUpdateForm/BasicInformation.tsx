@@ -1,4 +1,4 @@
-import { CheckBox, Input, TextArea } from '@stump/components'
+import { CheckBox, EmojiPicker, Input, Label, Text, TextArea } from '@stump/components'
 import { useLocaleContext } from '@stump/i18n'
 import { useFormContext, useFormState } from 'react-hook-form'
 
@@ -14,6 +14,7 @@ export default function BasicBookClubInformation() {
 
 	const isCreating = !ctx?.bookClub
 	const isPrivate = form.watch('isPrivate')
+	const emoji = form.watch('emoji')
 
 	const { t } = useLocaleContext()
 	const { errors } = useFormState({
@@ -32,6 +33,23 @@ export default function BasicBookClubInformation() {
 				data-1p-ignore
 				{...form.register('name')}
 			/>
+
+			{/* Emoji can only be changed once the club exists - the create mutation doesn't accept it */}
+			{!isCreating && (
+				<div className="gap-2 flex flex-col">
+					<Label>{t(getKey('emoji.label'))}</Label>
+					<Text variant="muted" size="sm">
+						{t(getKey('emoji.description'))}
+					</Text>
+					<EmojiPicker
+						value={emoji}
+						placeholder="😀"
+						onEmojiSelect={(selected) => form.setValue('emoji', selected?.native)}
+						triggerProps={{ className: 'h-9 w-9 text-lg' }}
+						align="start"
+					/>
+				</div>
+			)}
 
 			<TextArea
 				className="flex"

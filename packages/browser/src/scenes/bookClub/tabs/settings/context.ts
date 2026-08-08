@@ -1,13 +1,14 @@
 import { UpdateBookClubInput } from '@stump/graphql'
 import { createContext, useContext } from 'react'
 
-import { useBookClubContext } from '@/components/bookClub'
+import { PatchClubOptions, useBookClubContext } from '@/components/bookClub'
 
 export type IBookClubManagementContext = {
 	/**
-	 * A function that issues a PATCH update to the library.
+	 * A function that issues a partial update to the club - see `patchClub` on
+	 * `IBookClubContext`, which this delegates to.
 	 */
-	patch: (updates: Partial<UpdateBookClubInput>) => void
+	patch: (updates: UpdateBookClubInput, options?: PatchClubOptions) => void
 }
 
 export const BookClubManagementContext = createContext<IBookClubManagementContext | null>(null)

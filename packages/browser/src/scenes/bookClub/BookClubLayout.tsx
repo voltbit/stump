@@ -27,6 +27,7 @@ const query = graphql(`
 			slug
 			description
 			isPrivate
+			emoji
 			roleSpec
 			creator {
 				id
@@ -151,12 +152,27 @@ export default function BookClubLayout() {
 				bookClub,
 				viewerCanManage,
 				viewerIsMember,
+				// The `updateBookClub` mutation unconditionally overwrites `description`/`emoji` with
+				// whatever is (or isn't) provided, unlike the other fields which are only touched when
+				// present - see the note on `patchClub` in the context type. Filling in the club's
+				// current values as defaults before merging in the caller's partial update keeps every
+				// settings scene (basics, roles, etc) from clobbering fields it isn't editing.
 				patchClub: viewerCanManage
-					? (data) =>
-							patchClub({
-								id: bookClub.id,
-								input: data,
-							})
+					? (data, options) =>
+							patchClub(
+								{
+									id: bookClub.id,
+									input: {
+										name: bookClub.name,
+										description: bookClub.description,
+										isPrivate: bookClub.isPrivate,
+										emoji: bookClub.emoji,
+										memberRoleSpec: bookClub.roleSpec,
+										...data,
+									},
+								},
+								options,
+							)
 					: noop,
 			}}
 		>

@@ -1,11 +1,24 @@
 import { BookClubLayoutQuery, UpdateBookClubInput } from '@stump/graphql'
 import { createContext, useContext } from 'react'
 
+export type PatchClubOptions = {
+	onSuccess?: () => void
+	onError?: (error: unknown) => void
+}
+
 export type IBookClubContext = {
 	bookClub: NonNullable<BookClubLayoutQuery['bookClubBySlug']>
 	viewerIsMember: boolean
 	viewerCanManage: boolean
-	patchClub: (data: UpdateBookClubInput) => void
+	/**
+	 * Issues a partial update to the club. Any field omitted from `data` is filled in with its
+	 * current value before the request is sent, since the server-side `updateBookClub` mutation
+	 * unconditionally overwrites `description`/`emoji` with whatever is (or isn't) provided,
+	 * unlike `name`/`isPrivate`/`memberRoleSpec` which are only touched when present. Without this,
+	 * a caller that only intends to change e.g. the role labels would silently blank out the
+	 * description and emoji.
+	 */
+	patchClub: (data: UpdateBookClubInput, options?: PatchClubOptions) => void
 }
 
 /**

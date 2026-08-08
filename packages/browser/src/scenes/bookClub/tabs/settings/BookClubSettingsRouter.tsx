@@ -1,5 +1,4 @@
-import { noop } from 'lodash'
-import { lazy, Suspense, useCallback } from 'react'
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 
 import { useBookClubContext } from '@/components/bookClub'
@@ -12,33 +11,12 @@ const RoleManagementScene = lazy(() => import('./roles'))
 const DeletionScene = lazy(() => import('./danger'))
 const BookClubSchedulerScene = lazy(() => import('./scheduler'))
 
-// TODO(book-club): Implement
-
 export default function BookClubSettingsRouter() {
-	const { bookClub } = useBookClubContext()
-
-	// const { mutate: editClub } = useUpdateBookClub({ id: bookClub.id })
-	const editClub = noop
-
-	// TODO: implement a proper patch on backend
-	/**
-	 * A pseudo-patch function which will update the book club, mixing what is present in the cache
-	 * with the updates provided.
-	 */
-	const patch = useCallback(
-		(updates: Partial<unknown>) => {
-			const payload: unknown = {
-				...bookClub,
-				...updates,
-			}
-			editClub(payload)
-		},
-		[editClub, bookClub],
-	)
+	const { patchClub } = useBookClubContext()
 
 	return (
 		<Suspense>
-			<BookClubManagementContext.Provider value={{ patch }}>
+			<BookClubManagementContext.Provider value={{ patch: patchClub }}>
 				<Routes>
 					<Route path="" element={<Navigate to="basics" replace />} />
 					<Route path="basics" element={<BasicSettingsScene />} />

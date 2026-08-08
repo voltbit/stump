@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useSDK, useSuspenseGraphQL } from '@stump/client'
 import { Button, Form } from '@stump/components'
-import { graphql } from '@stump/graphql'
+import { extractErrorMessage, graphql } from '@stump/graphql'
 import { useLocaleContext } from '@stump/i18n'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
 import {
 	buildSchema,
@@ -46,13 +47,29 @@ export default function BasicSettingsScene() {
 		resolver: zodResolver(schema),
 	})
 
+	// Once the patch succeeds, the club in cache reflects the saved values - resync the form so
+	// it visibly reflects saved state without requiring a manual refresh
+	useEffect(() => {
+		form.reset(formDefaults(club))
+	}, [club, form])
+
 	const handleSubmit = useCallback(
-		({ name, description, isPrivate }: CreateOrUpdateBookClubSchema) => {
-			patch({
-				description,
-				isPrivate,
-				name,
-			})
+		({ name, description, isPrivate, emoji }: CreateOrUpdateBookClubSchema) => {
+			patch(
+				{
+					description,
+					emoji,
+					isPrivate,
+					name,
+				},
+				{
+					onSuccess: () => toast.success('Book club updated'),
+					onError: (error) => {
+						console.error('Error updating book club:', error)
+						toast.error('Failed to update book club', { description: extractErrorMessage(error) })
+					},
+				},
+			)
 		},
 		[patch],
 	)
