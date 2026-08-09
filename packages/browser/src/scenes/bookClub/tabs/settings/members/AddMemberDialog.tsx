@@ -69,7 +69,7 @@ export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose,
 		{ enabled: isOpen },
 	)
 
-	const { data: membersData } = useGraphQL(
+	const { data: membersData, error: membersError } = useGraphQL(
 		membersQuery,
 		sdk.cacheKey('bookClubById', [bookClubId, 'members', 'unpaginated']),
 		{ id: bookClubId },
@@ -84,6 +84,14 @@ export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose,
 	const usersErrorMessage = usersError
 		? extractErrorMessage(usersError, 'You may not have permission to view the server user list')
 		: undefined
+	// Note: unlike a silent fallback to an empty exclusion list, surface this error and disable
+	// the picker below - otherwise a failed fetch would offer already-existing members as
+	// candidates, and adding one back would either fail server-side or (before that check
+	// existed) silently create a duplicate membership row.
+	const membersErrorMessage = membersError
+		? extractErrorMessage(membersError, "Failed to load the club's current members")
+		: undefined
+	const disabledMessage = usersErrorMessage ?? membersErrorMessage
 
 	useEffect(() => {
 		if (!usersError) return
@@ -96,6 +104,15 @@ export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose,
 			),
 		})
 	}, [usersError])
+
+	useEffect(() => {
+		if (!membersError) return
+
+		console.error('Error fetching existing club members:', membersError)
+		toast.error("Failed to load the club's current members", {
+			description: extractErrorMessage(membersError),
+		})
+	}, [membersError])
 
 	const userOptions = useMemo(
 		() => buildUserOptions(usersData?.users.nodes ?? [], excludedUserIds),
@@ -145,10 +162,10 @@ export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose,
 				</Dialog.Header>
 
 				<Form id="add-book-club-member" form={form} onSubmit={handleSubmit}>
-					{usersErrorMessage && (
+					{disabledMessage && (
 						<div className="px-3 py-2 text-xs gap-2 flex items-start rounded-md border border-destructive/30 bg-destructive/10 text-destructive">
 							<AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-							<span>Couldn&apos;t load users: {usersErrorMessage}</span>
+							<span>Couldn&apos;t load users: {disabledMessage}</span>
 						</div>
 					)}
 
@@ -160,11 +177,11 @@ export default function AddMemberDialog({ isOpen, bookClubId, roleSpec, onClose,
 							onChange={(value) => form.setValue('userId', value ?? '', { shouldValidate: true })}
 							filterable
 							size="full"
-							disabled={!!usersErrorMessage}
+							disabled={!!disabledMessage}
 							placeholder="Select a user..."
 							filterPlaceholder="Search users..."
 							filterEmptyMessage={
-								usersErrorMessage
+								disabledMessage
 									? 'Unable to load users'
 									: userOptions.length
 										? 'No matching users'
