@@ -11,7 +11,9 @@ use crate::{
 		BookClubInvitationInput, BookClubInvitationResponseInput,
 		BookClubInvitationResponseValidator, BookClubMemberInput,
 	},
-	mutation::book_club::get_book_club_for_admin,
+	mutation::{
+		book_club::get_book_club_for_admin, book_club_member::ensure_not_already_a_member,
+	},
 	object::book_club_invitation::BookClubInvitation,
 };
 
@@ -127,6 +129,12 @@ async fn accept_invitation(
 	// Otherwise, the delete branch above would require another invite to be sent.
 	let member_input = input.ok_or("Accepting an invitation requires a member object")?;
 
+	// An invitation can outlive the user already joining the club some other way (e.g.
+	// being added directly by an admin while the invite was still pending), so this is not
+	// purely defensive - guard against the resulting duplicate membership row the same way
+	// create_book_club_member does.
+	ensure_not_already_a_member(&invitation.book_club_id, &user.id, conn).await?;
+
 	let member = create_member_active_model(user, &invitation, member_input);
 	let _created_member = member.insert(conn).await?;
 	// TODO: soft delete?
@@ -237,6 +245,8 @@ mod tests {
 		let member_active_model = create_member_active_model(&user, &invitation, member);
 		let member_model = member_active_model.try_into_model().unwrap();
 		let mock_db = get_mock_db_for_model(vec![invitation.clone()])
+			// `ensure_not_already_a_member`'s existence check finds no prior membership row
+			.append_query_results::<book_club_member::Model, _, _>(vec![vec![]])
 			.append_query_results(vec![vec![member_model]])
 			.append_exec_results(vec![sea_orm::MockExecResult {
 				last_insert_id: 1,
@@ -245,6 +255,39 @@ mod tests {
 			.into_connection();
 		let result = handle_book_club_invitation(&user, &id, input, &mock_db).await;
 		assert!(result.is_ok());
+	}
+
+	#[tokio::test]
+	async fn accept_book_club_invitation_rejects_existing_membership() {
+		let user = get_default_user();
+		let id: ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa".into();
+		let member = BookClubMemberInput {
+			user_id: "42".to_string(),
+			display_name: None,
+		};
+
+		let input = BookClubInvitationResponseInput {
+			accept: true,
+			member: Some(member),
+		};
+
+		let invitation = get_default_book_club_invitation();
+		let existing_member = book_club_member::Model {
+			id: "existing-member".to_string(),
+			display_name: None,
+			bio: None,
+			hide_progress: false,
+			role: BookClubMemberRole::Member,
+			joined_at: chrono::Utc::now().into(),
+			user_id: user.id.clone(),
+			book_club_id: invitation.book_club_id.clone(),
+		};
+		let mock_db = get_mock_db_for_model(vec![invitation.clone()])
+			.append_query_results(vec![vec![existing_member]])
+			.into_connection();
+
+		let result = handle_book_club_invitation(&user, &id, input, &mock_db).await;
+		assert!(result.is_err());
 	}
 
 	#[tokio::test]
