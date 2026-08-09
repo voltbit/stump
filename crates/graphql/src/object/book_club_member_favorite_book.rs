@@ -1,7 +1,10 @@
 use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use models::entity::{book_club_member_favorite_book, media};
 
-use crate::{data::CoreContext, object::media::Media};
+use crate::{
+	data::{AuthContext, CoreContext},
+	object::media::Media,
+};
 
 #[derive(Debug, SimpleObject)]
 #[graphql(complex)]
@@ -26,8 +29,9 @@ impl BookClubMemberFavoriteBook {
 		};
 
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
+		let AuthContext { user, .. } = ctx.data::<AuthContext>()?;
 
-		let model = media::ModelWithMetadata::find_by_id(book_id.clone())
+		let model = media::ModelWithMetadata::find_by_id_for_user(book_id.clone(), user)
 			.into_model::<media::ModelWithMetadata>()
 			.one(conn)
 			.await?;
