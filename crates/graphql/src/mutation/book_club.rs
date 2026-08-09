@@ -1,6 +1,6 @@
 use async_graphql::{Context, Object, Result, ID};
 use models::{
-	entity::{book_club, user::AuthUser},
+	entity::{book_club, book_club_member, user::AuthUser},
 	shared::{book_club::BookClubMemberRole, enums::UserPermission},
 };
 use sea_orm::{prelude::*, IntoActiveModel, TransactionTrait};
@@ -62,7 +62,15 @@ impl BookClubMutation {
 		Ok(updated_club.into())
 	}
 
-	#[graphql(guard = "BookClubRoleGuard::new(id.as_ref(), BookClubMemberRole::Creator)")]
+	// Note: the guard above (like all `BookClubRoleGuard`s) only requires Admin-or-above
+	// membership - `BookClubMemberRole::Creator` is the guard's *minimum*, and Creator is
+	// merely the highest role, so an Admin would satisfy it too. Deletion is meant to be
+	// stricter than that (see docs/rbac.mdx and the mobile settings screen, both of which
+	// gate Delete on Creator specifically), so `ensure_can_delete_book_club` below performs
+	// the real, Creator-only check in the resolver body, mirroring how
+	// `remove_book_club_member` refuses to remove the Creator in-resolver rather than
+	// relying solely on its guard.
+	#[graphql(guard = "BookClubRoleGuard::new(id.as_ref(), BookClubMemberRole::Admin)")]
 	async fn delete_book_club(&self, ctx: &Context<'_>, id: ID) -> Result<BookClub> {
 		let AuthContext { user, .. } = ctx.data::<AuthContext>()?;
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
@@ -71,9 +79,32 @@ impl BookClubMutation {
 			.await?
 			.ok_or("Book club not found or you lack permission to update")?;
 
+		let membership =
+			book_club_member::Entity::find_by_club_for_user(user, id.as_ref())
+				.one(conn)
+				.await?;
+		let actor_role = membership.map(|member| member.role).unwrap_or_default();
+
+		ensure_can_delete_book_club(actor_role, user.is_server_owner)?;
+
 		book_club.clone().delete(conn).await?;
 
 		Ok(book_club.into())
+	}
+}
+
+/// Only the Creator of a book club (or the server owner) may delete it. This is stricter
+/// than every other club-management action, which are Admin-or-above (see
+/// docs/rbac.mdx: "Admin ... cannot delete the book club"), and matches the mobile
+/// settings screen, which gates the Delete action on Creator.
+fn ensure_can_delete_book_club(
+	actor_role: BookClubMemberRole,
+	actor_is_server_owner: bool,
+) -> Result<()> {
+	if actor_role == BookClubMemberRole::Creator || actor_is_server_owner {
+		Ok(())
+	} else {
+		Err("Only the creator can delete the book club".into())
 	}
 }
 
@@ -131,5 +162,32 @@ mod tests {
 
 		let result = get_book_club_for_admin(&user, &id, &conn).await.unwrap();
 		assert_eq!(result, Some(book_club));
+	}
+
+	#[test]
+	fn ensure_can_delete_book_club_rejects_admin() {
+		let result = ensure_can_delete_book_club(BookClubMemberRole::Admin, false);
+		assert!(result.is_err());
+	}
+
+	#[test]
+	fn ensure_can_delete_book_club_allows_creator() {
+		let result = ensure_can_delete_book_club(BookClubMemberRole::Creator, false);
+		assert!(result.is_ok());
+	}
+
+	#[test]
+	fn ensure_can_delete_book_club_rejects_plain_member() {
+		let result = ensure_can_delete_book_club(BookClubMemberRole::Member, false);
+		assert!(result.is_err());
+	}
+
+	#[test]
+	fn ensure_can_delete_book_club_allows_server_owner_without_creator_membership() {
+		// A server owner may not have a book_club_member row of their own at all, in which
+		// case `unwrap_or_default()` yields `BookClubMemberRole::Member` - the server-owner
+		// bypass must still let them through.
+		let result = ensure_can_delete_book_club(BookClubMemberRole::Member, true);
+		assert!(result.is_ok());
 	}
 }
