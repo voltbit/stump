@@ -152,6 +152,19 @@ impl Entity {
 				.and(Column::UserId.eq(user.id.clone())),
 		)
 	}
+
+	/// Like [Self::find_by_club_for_user], but takes a raw user ID rather than the caller's
+	/// own [AuthUser]. Used to check whether an *arbitrary* target user (not necessarily the
+	/// caller) already has a membership row in the club - e.g. before creating a new member
+	/// or accepting an invitation on their behalf - since there is no unique constraint on
+	/// (book_club_id, user_id) at the DB level.
+	pub fn find_by_club_and_user_id(book_club_id: &str, user_id: &str) -> Select<Self> {
+		Self::find().filter(
+			Column::BookClubId
+				.eq(book_club_id)
+				.and(Column::UserId.eq(user_id)),
+		)
+	}
 }
 
 #[cfg(test)]
@@ -194,6 +207,15 @@ mod tests {
 		assert_eq!(
 			select_no_cols_to_string(select),
 			(r#"SELECT  FROM "book_club_members" WHERE "book_club_members"."book_club_id" = '321'"#)
+		);
+	}
+
+	#[test]
+	fn test_find_by_club_and_user_id() {
+		let select = Entity::find_by_club_and_user_id("321", "42");
+		assert_eq!(
+			select_no_cols_to_string(select),
+			(r#"SELECT  FROM "book_club_members" WHERE "book_club_members"."book_club_id" = '321' AND "book_club_members"."user_id" = '42'"#)
 		);
 	}
 }

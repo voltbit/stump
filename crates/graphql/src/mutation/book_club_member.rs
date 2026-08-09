@@ -34,6 +34,9 @@ impl BookClubMemberMutation {
 		input: CreateBookClubMemberInput,
 	) -> Result<BookClubMember> {
 		let conn = ctx.data::<CoreContext>()?.conn.as_ref();
+
+		ensure_not_already_a_member(book_club_id.as_ref(), &input.user_id, conn).await?;
+
 		let created_member = input
 			.into_active_model(book_club_id.as_ref())
 			.insert(conn)
@@ -82,6 +85,8 @@ impl BookClubMemberMutation {
 				.one(conn)
 				.await?
 				.ok_or("You are not a member of this club or it does not exist")?;
+
+		ensure_can_leave_book_club(member.role)?;
 
 		member.clone().delete(conn).await?;
 
@@ -217,6 +222,41 @@ async fn upsert_favorite_book(
 	)
 }
 
+/// Returns an error if `user_id` already has a membership row in the given book club.
+/// There is no unique constraint on (book_club_id, user_id) at the DB level, so this must
+/// be checked explicitly by every path that can create a membership row: direct creation
+/// ([BookClubMemberMutation::create_book_club_member]) and invitation acceptance
+/// (`accept_invitation` in the book_club_invitation mutation).
+pub async fn ensure_not_already_a_member(
+	book_club_id: &str,
+	user_id: &str,
+	conn: &DatabaseConnection,
+) -> Result<()> {
+	let existing =
+		book_club_member::Entity::find_by_club_and_user_id(book_club_id, user_id)
+			.one(conn)
+			.await?;
+
+	if existing.is_some() {
+		return Err("This user is already a member of the book club".into());
+	}
+
+	Ok(())
+}
+
+/// Guards [BookClubMemberMutation::leave_book_club]: the Creator can never leave their own
+/// club via this mutation, since doing so would orphan it (no other role can delete the
+/// club or transfer the Creator role away). This mirrors remove_book_club_member's refusal
+/// to remove the Creator - the same invariant, just reached through the member leaving
+/// rather than being removed.
+fn ensure_can_leave_book_club(role: BookClubMemberRole) -> Result<()> {
+	if role == BookClubMemberRole::Creator {
+		Err("The creator cannot leave the book club".into())
+	} else {
+		Ok(())
+	}
+}
+
 /// Enforces the role-change permission matrix for [BookClubMemberMutation::update_book_club_member_role]:
 /// - A member can never change their own role
 /// - Nobody can change the Creator's role, or promote another member to Creator
@@ -297,6 +337,45 @@ mod tests {
 			.await
 			.unwrap();
 		assert_eq!(result, saved);
+	}
+
+	#[test]
+	fn creator_cannot_leave_book_club() {
+		let result = ensure_can_leave_book_club(BookClubMemberRole::Creator);
+		assert!(result.is_err());
+	}
+
+	#[test]
+	fn admin_can_leave_book_club() {
+		let result = ensure_can_leave_book_club(BookClubMemberRole::Admin);
+		assert!(result.is_ok());
+	}
+
+	#[test]
+	fn member_can_leave_book_club() {
+		let result = ensure_can_leave_book_club(BookClubMemberRole::Member);
+		assert!(result.is_ok());
+	}
+
+	#[tokio::test]
+	async fn ensure_not_already_a_member_allows_new_member() {
+		let conn = MockDatabase::new(sea_orm::DatabaseBackend::Sqlite)
+			.append_query_results::<book_club_member::Model, _, _>(vec![vec![]])
+			.into_connection();
+
+		let result = ensure_not_already_a_member("club-1", "user-1", &conn).await;
+		assert!(result.is_ok());
+	}
+
+	#[tokio::test]
+	async fn ensure_not_already_a_member_rejects_existing_membership() {
+		let existing = get_member("member-1", BookClubMemberRole::Member);
+		let conn = MockDatabase::new(sea_orm::DatabaseBackend::Sqlite)
+			.append_query_results(vec![vec![existing]])
+			.into_connection();
+
+		let result = ensure_not_already_a_member("club-1", "user-member-1", &conn).await;
+		assert!(result.is_err());
 	}
 
 	fn get_member(id: &str, role: BookClubMemberRole) -> book_club_member::Model {
