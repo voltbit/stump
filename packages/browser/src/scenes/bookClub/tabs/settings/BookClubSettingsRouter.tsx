@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router'
+import { lazy, Suspense, useEffect } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router'
 
 import { useBookClubContext } from '@/components/bookClub'
 
@@ -13,7 +13,21 @@ const DeletionScene = lazy(() => import('./danger'))
 const BookClubSchedulerScene = lazy(() => import('./scheduler'))
 
 export default function BookClubSettingsRouter() {
-	const { patchClub } = useBookClubContext()
+	const { patchClub, viewerCanManage } = useBookClubContext()
+	const navigate = useNavigate()
+
+	// Settings is Admin/Creator-only (see BookClubNavigation, which already hides the tab from
+	// plain members). A deep link straight to /settings still needs to be caught here, though -
+	// redirect back to the club home rather than rendering a blank page.
+	useEffect(() => {
+		if (!viewerCanManage) {
+			navigate('..', { replace: true })
+		}
+	}, [viewerCanManage, navigate])
+
+	if (!viewerCanManage) {
+		return null
+	}
 
 	return (
 		<Suspense>

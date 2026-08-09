@@ -10,7 +10,7 @@ export default function BookClubNavigation() {
 	const {
 		preferences: { primaryNavigationMode, layoutMaxWidthPx },
 	} = usePreferences()
-	const { viewerIsMember } = useBookClubContext()
+	const { viewerIsMember, viewerCanManage } = useBookClubContext()
 
 	const tabs = useMemo(() => {
 		const base = [
@@ -37,13 +37,19 @@ export default function BookClubNavigation() {
 				label: 'Members',
 				to: 'members',
 			},
-			{
-				isActive: location.pathname.match(/\/clubs\/[^/]+\/settings(\/.*)?$/),
-				label: 'Settings',
-				to: 'settings',
-			},
+			// Settings is Admin/Creator-only, matching mobile's admin-gated edit form - a plain
+			// member has no settings to manage (and, notably, no leave-club affordance here yet)
+			...(viewerCanManage
+				? [
+						{
+							isActive: location.pathname.match(/\/clubs\/[^/]+\/settings(\/.*)?$/),
+							label: 'Settings',
+							to: 'settings',
+						},
+					]
+				: []),
 		]
-	}, [location, viewerIsMember])
+	}, [location, viewerIsMember, viewerCanManage])
 
 	const preferTopBar = primaryNavigationMode === 'TOPBAR'
 

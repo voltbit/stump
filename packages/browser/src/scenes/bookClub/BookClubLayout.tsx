@@ -11,7 +11,6 @@ import { SceneContainer } from '@/components/container'
 import { GenericSettingsHeader } from '@/components/settings'
 import { usePreferences } from '@/hooks'
 import { useUserStore } from '@/stores'
-import { noop } from '@/utils/misc'
 
 import BookClubHeader from './BookClubHeader'
 import BookClubNavigation from './BookClubNavigation'
@@ -173,7 +172,12 @@ export default function BookClubLayout() {
 								},
 								options,
 							)
-					: noop,
+					: // Settings routes are gated on viewerCanManage (see BookClubSettingsRouter), so
+						// this branch shouldn't normally be reachable - but if it is hit, surface the
+						// failure through the caller's own error handling rather than swallowing it
+						// silently, since a bare no-op previously dropped options.onSuccess/onError too.
+						(_data, options) =>
+							options?.onError?.(new Error('You do not have permission to manage this book club')),
 			}}
 		>
 			<div
