@@ -1,0 +1,64 @@
+name: Fork Docker Build
+
+# Fork-only workflow (voltbit/stump): build the book-clubs image and push it
+# to GHCR so it can be deployed without upstream's Docker Hub credentials.
+# Manual trigger only — this fork has no release cadence.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'book-clubs'
+      tag:
+        description: 'Image tag'
+        required: true
+        default: 'book-clubs'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build and push GHCR image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Get commit short sha
+        run: echo "GIT_REV=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/voltbit/stump:${{ github.event.inputs.tag }}
+            ghcr.io/voltbit/stump:${{ env.GIT_REV }}
+          build-args: |
+            GIT_REV=${{ env.GIT_REV }}
+            BUILD_CHANNEL=nightly
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
