@@ -32,8 +32,8 @@ type BookClubTab = 'overview' | 'members' | 'settings'
 const pathsInternal = {
 	bookClub: (slug: string, tab?: BookClubTab) => `/clubs/${slug}${tab ? `/${tab}` : ''}`,
 	bookClubCreate: () => '/clubs/create',
-	bookClubScheduler: (id: string) => pathsInternal.bookClub(id, 'settings') + '/scheduler',
-	bookClubSettings: (id: string) => pathsInternal.bookClub(id, 'settings'),
+	bookClubScheduler: (slug: string) => pathsInternal.bookClub(slug, 'settings') + '/scheduler',
+	bookClubSettings: (slug: string) => pathsInternal.bookClub(slug, 'settings'),
 	bookClubs: () => '/clubs',
 	bookManagement: (id: string) => `/books/${id}/manage`,
 	bookOverview: (id: string) => `/books/${id}`,
@@ -125,8 +125,8 @@ export function usePaths() {
 	return {
 		bookClub: (id: string, tab?: BookClubTab) => `${basePath}${pathsInternal.bookClub(id, tab)}`,
 		bookClubCreate: () => `${basePath}${pathsInternal.bookClubCreate()}`,
-		bookClubScheduler: (id: string) => `${basePath}${pathsInternal.bookClubScheduler(id)}`,
-		bookClubSettings: (id: string) => `${basePath}${pathsInternal.bookClubSettings(id)}`,
+		bookClubScheduler: (slug: string) => `${basePath}${pathsInternal.bookClubScheduler(slug)}`,
+		bookClubSettings: (slug: string) => `${basePath}${pathsInternal.bookClubSettings(slug)}`,
 		bookClubs: () => `${basePath}${pathsInternal.bookClubs()}`,
 		bookManagement: (id: string) => `${basePath}${pathsInternal.bookManagement(id)}`,
 		bookOverview: (id: string) => `${basePath}${pathsInternal.bookOverview(id)}`,

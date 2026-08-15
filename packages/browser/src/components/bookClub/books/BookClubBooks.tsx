@@ -101,7 +101,7 @@ export default function BookClubBooks() {
 						contentClassName="md:text-left"
 					/>
 					{viewerCanManage && (
-						<ButtonOrLink variant="secondary" href={paths.bookClubScheduler(bookClub.id)}>
+						<ButtonOrLink variant="secondary" href={paths.bookClubScheduler(bookClub.slug)}>
 							Create a schedule
 						</ButtonOrLink>
 					)}
